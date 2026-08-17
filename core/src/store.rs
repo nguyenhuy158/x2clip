@@ -68,6 +68,10 @@ impl Store {
 
     fn init(conn: Connection) -> Result<Self> {
         conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")?;
+        // Tray và `watch` là hai tiến trình, hai connection, cùng một file. WAL
+        // cho đọc song song nhưng ghi vẫn phải xếp hàng; không có timeout thì
+        // bên thứ hai ăn SQLITE_BUSY ngay lập tức.
+        conn.busy_timeout(std::time::Duration::from_secs(5))?;
         conn.execute_batch(SCHEMA)?;
         // Cột PNG đầy đủ, thêm sau Phase 1 nên phải ALTER cho DB đã tồn tại.
         // Cố ý tách khỏi `body`: `list()` SELECT body của mọi row, để ảnh ở đó

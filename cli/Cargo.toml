@@ -11,3 +11,10 @@ path = "src/main.rs"
 [dependencies]
 anyhow.workspace = true
 x2clip-core = { path = "../core" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Chỉ "glow": mặc định eframe kéo wgpu + cả trăm crate, mà cửa sổ này chỉ vẽ
+# một ô tìm kiếm với một danh sách text.
+eframe = { version = "0.32", default-features = false, features = ["glow"] }
+global-hotkey = "0.8"
+tray-icon = "0.24"

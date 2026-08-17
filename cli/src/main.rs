@@ -6,10 +6,13 @@
 //! item thì phải qua daemon — chưa làm.
 //!
 //! `copy` không đụng được cờ chống dội (cờ đó nằm trong `Watcher` của tiến
-//! trình `watch` khác). Nên item vừa copy lại sẽ được `watch` thấy như một lần
-//! copy mới: **không đẻ row mới** (`hash` UNIQUE, chỉ bump `updated_at`) nhưng
-//! **có gửi lại cho máy kia**. Đó cũng đúng ý người dùng: copy lại là muốn nó
-//! sang máy bên kia.
+//! trình `watch` khác), nên `watch` sẽ thấy nó như một lần copy mới. Nhưng
+//! `upsert_text` chỉ bump `updated_at`, **không** đặt lại `synced` về
+//! `SYNC_CHO_GUI` — nên item đã gửi rồi sẽ **không** được gửi lại cho máy kia.
+//! Đúng ý: máy kia đã có nội dung đó, gửi lại là tốn băng thông vô ích.
+
+#[cfg(target_os = "macos")]
+mod tray;
 
 use anyhow::{bail, Result};
 use std::path::{Path, PathBuf};
@@ -26,6 +29,7 @@ const USAGE: &str = "\
 x2clip — lịch sử clipboard
 
     x2clip watch          theo dõi clipboard và ghi lịch sử (chạy nền)
+    x2clip tray           icon tray + phím tắt ⌥⌘V (hiện chỉ có trên macOS)
     x2clip list [n]       liệt kê n item mới nhất (mặc định 20)
     x2clip search <từ>    tìm trong lịch sử, không phân biệt hoa thường
     x2clip copy <id>      đưa item lên clipboard (hiện chỉ đúng trên macOS)
@@ -50,6 +54,15 @@ fn main() -> Result<()> {
             );
             let co = co_tam_dung(&db);
             watch(store, co)
+        }
+        Some("tray") => {
+            #[cfg(target_os = "macos")]
+            {
+                tray::chay()
+            }
+            // Không im lặng thoát 0: người dùng phải biết vì sao không có icon.
+            #[cfg(not(target_os = "macos"))]
+            bail!("`tray` hiện chỉ chạy trên macOS — xem đầu cli/src/tray.rs");
         }
         Some("list") => {
             let n = args.get(1).map(|s| s.parse()).transpose()?.unwrap_or(20);

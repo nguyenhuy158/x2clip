@@ -189,18 +189,45 @@ cái danh sách nhìn cho vui.
 | Ghim (US-B4) | `x2clip pin` / `unpin` | ✅ |
 | Xoá (US-B5) | `x2clip rm <id>` | ✅ xoá được cả item đã ghim |
 | Tạm dừng sync (US-A4) | `x2clip pause` / `resume` / `status` | ✅ cờ file cạnh DB, `watch` đọc mỗi vòng nên có tác dụng ngay |
-| Tray + phím tắt (US-C1, US-C2) | — | ⬜ chưa chọn thư viện GUI |
+| Tray + phím tắt (US-C1, US-C2) | `x2clip tray` | 🟡 code xong, **macOS-only**, chưa chạy tay |
 
 `copy` không set được cờ chống dội (cờ nằm trong `Watcher` của tiến trình
-`watch` khác), nên item copy lại **có** được gửi sang máy kia. Không đẻ row mới
-(`hash` UNIQUE) — cố ý để vậy: copy lại tức là muốn nó sang bên kia.
+`watch` khác) nên `watch` thấy nó như một lần copy mới. Nhưng `upsert_text` chỉ
+bump `updated_at`, **không** đặt lại `synced` → item đã gửi **không** gửi lại
+cho máy kia. Đúng ý: bên kia đã có nội dung đó rồi.
+
+### Vỏ GUI — chọn gì và vì sao
+
+`tray-icon` 0.24 + `global-hotkey` 0.8 + `eframe` 0.32 (feature `glow`, bỏ
+wgpu). Toàn Rust thuần, không webkitgtk, không node — đúng cảnh báo ở Phase 5.
+
+Ban đầu định để phím tắt mở thẳng menu tray cho khỏi cần cửa sổ, nhưng `muda`
+0.19 chỉ mở context menu qua `hwnd` / `gtk_window` / `nsview`, **không** có
+đường gọi từ NSApp bằng code. Mà US-B3 cần ô tìm kiếm nên đằng nào cũng phải có
+cửa sổ → dùng `eframe`.
+
+Ba chỗ dễ hỏng, đã xử lý trong `cli/src/tray.rs`:
+- Cửa sổ **chỉ ẩn, không bao giờ đóng** — đóng là event loop chết, phím tắt chỉ
+  chạy được đúng một lần.
+- Ẩn thì egui ngủ, không ai đọc kênh phím tắt nữa. `request_repaint_after(200ms)`
+  mỗi frame để đánh thức. **Đây là lỗi im lặng, không log nào báo** — phải test
+  tay: ẩn cửa sổ ~30s rồi bấm lại ⌥⌘V.
+- Tray dựng **bên trong** closure của `run_native`; dựng trước là NSApplication
+  chưa tồn tại, icon không hiện.
+
+Thêm `busy_timeout(5s)` trong `Store::init`: tray và `watch` là hai tiến trình,
+hai connection, một file. WAL cho đọc song song nhưng ghi vẫn xếp hàng.
 
 **Exit criteria**
-- [ ] Chạy thật trên **cả hai** OS, không chỉ macOS
-- [ ] Phím tắt mở cửa sổ trong [N6](NFR.md#1-ngưỡng-chấp-nhận), ô tìm kiếm sẵn con trỏ
-- [ ] Tray phân biệt được đã kết nối / mất kết nối / tạm dừng
+- [ ] Chạy thật trên **cả hai** OS, không chỉ macOS — Linux còn vướng X11
+      owner-based, nhưng tray là tiến trình sống nên về lý là gỡ được
+- [ ] Phím tắt mở cửa sổ trong [N6](NFR.md#1-ngưỡng-chấp-nhận), ô tìm kiếm sẵn con trỏ — code có (`vua_mo` → `request_focus`), chưa bấm thử
+- [ ] Tray phân biệt được đã kết nối / mất kết nối / tạm dừng — code có (chấm xanh / vàng / xám), chưa nhìn thử
 - [ ] Mọi trường hợp ở [NFR § Hành vi khi lỗi](NFR.md#5-hành-vi-khi-lỗi) đều nhìn thấy được — không có lỗi im lặng
 - [ ] Tìm kiếm ở mức 1000 item đạt [N5](NFR.md#1-ngưỡng-chấp-nhận)
+
+**Còn thiếu:** ghim/xoá trong cửa sổ tray (vẫn phải ra CLI) — không nằm trong
+exit criteria nên chưa làm. Cửa sổ chỉ tìm + click để dùng lại.
 
 ## Phase 5 — Đóng gói · ⬜
 
