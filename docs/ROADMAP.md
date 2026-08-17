@@ -159,14 +159,15 @@ Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức
 
 **Exit criteria**
 - [ ] Screenshot macOS → paste được ở NixOS, cùng kích thước pixel
-      (round-trip nguyên byte đã xanh trên hộp thư giả — `phase3.rs`; còn thiếu
-      hai máy thật, cùng chỗ tắc với Phase 2)
+      (round-trip nguyên byte đã xanh trên hộp thư giả — `phase3.rs`; ghi/đọc
+      lại trên clipboard macOS thật cũng giữ nguyên hash — `clipboard_that.rs`;
+      còn thiếu hai máy thật, cùng chỗ tắc với Phase 2)
 - [ ] Chiều ngược lại cũng được
 - [ ] Trễ đạt [N2](NFR.md#1-ngưỡng-chấp-nhận)
 - [x] Ảnh vượt giới hạn → vào lịch sử local, đánh dấu không sync, không crash
 - [x] Password từ password manager (macOS) không vào lịch sử
-      (`org.nspasteboard.ConcealedType`; test dùng clipboard giả, còn thiếu
-      một lần thử tay với password manager thật)
+      (`org.nspasteboard.ConcealedType`, đọc được trên pasteboard **thật** —
+      `clipboard_that.rs`, chạy với `--ignored`)
 - [ ] RAM đạt [N10](NFR.md#2-tài-nguyên) sau khi sync ~20 ảnh
 
 ## Phase 4 — UI · ⬜
