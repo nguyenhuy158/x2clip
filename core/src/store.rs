@@ -2,7 +2,7 @@
 
 use crate::{now_ms, MAX_AGE_MS, MAX_ITEMS};
 use anyhow::Result;
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OptionalExtension};
 use std::path::Path;
 
 const SCHEMA: &str = "
@@ -202,12 +202,42 @@ impl Store {
             .collect())
     }
 
-    pub fn set_pinned(&self, id: i64, pinned: bool) -> Result<()> {
-        self.conn.execute(
+    /// Một item theo id. `None` = không có — người gọi báo lỗi thay vì im lặng
+    /// không làm gì (NFR § hành vi khi lỗi).
+    pub fn lay(&self, id: i64) -> Result<Option<Item>> {
+        Ok(self
+            .conn
+            .query_row(
+                "SELECT id, kind, COALESCE(body, ''), created_at, updated_at, pinned
+                 FROM items WHERE id = ?1",
+                [id],
+                |r| {
+                    Ok(Item {
+                        id: r.get(0)?,
+                        kind: r.get(1)?,
+                        body: r.get(2)?,
+                        created_at: r.get(3)?,
+                        updated_at: r.get(4)?,
+                        pinned: r.get::<_, i64>(5)? != 0,
+                    })
+                },
+            )
+            .optional()?)
+    }
+
+    /// US-B5. Xoá cả item đã ghim — ghim chỉ chặn `prune` tự động, không chặn
+    /// người dùng tự tay xoá. Trả về `false` nếu không có id đó.
+    pub fn xoa(&self, id: i64) -> Result<bool> {
+        Ok(self.conn.execute("DELETE FROM items WHERE id = ?1", [id])? > 0)
+    }
+
+    /// Trả về `false` nếu không có id đó.
+    pub fn set_pinned(&self, id: i64, pinned: bool) -> Result<bool> {
+        let n = self.conn.execute(
             "UPDATE items SET pinned = ?1 WHERE id = ?2",
             params![pinned as i64, id],
         )?;
-        Ok(())
+        Ok(n > 0)
     }
 
     /// Item nhận từ hộp thư: lấy `ts` của bên gửi làm mốc thời gian để lịch

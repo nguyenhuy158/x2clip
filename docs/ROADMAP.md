@@ -170,7 +170,7 @@ Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức
       `clipboard_that.rs`, chạy với `--ignored`)
 - [ ] RAM đạt [N10](NFR.md#2-tài-nguyên) sau khi sync ~20 ảnh
 
-## Phase 4 — UI · ⬜
+## Phase 4 — UI · 🟡
 
 **Story:** [US-B3](USER-STORIES.md#us-b3--dùng-lại-một-item), [US-B4](USER-STORIES.md#us-b4--ghim-item), [US-B5](USER-STORIES.md#us-b5--xoá-item), [US-C1](USER-STORIES.md#us-c1--mở-lịch-sử-bằng-phím-tắt), [US-C2](USER-STORIES.md#us-c2--biết-được-sync-có-đang-chạy-hay-không), [US-A4](USER-STORIES.md#us-a4--tạm-dừng-sync)
 
@@ -178,6 +178,22 @@ Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức
 - Global hotkey mở cửa sổ
 - Danh sách lịch sử, tìm kiếm, ghim, xoá, click để dùng lại
 - Tạm dừng sync
+
+**Phần chức năng đã xong ở CLI, chưa có vỏ GUI.** Làm CLI trước vì mọi thứ tray
+gọi tới đều là những hàm này; tray mà không có `copy`/`pin`/`rm` thì chỉ là một
+cái danh sách nhìn cho vui.
+
+| Việc | Lệnh | Trạng thái |
+|---|---|---|
+| Dùng lại item (US-B3) | `x2clip copy <id>` | ✅ macOS. **Linux chưa** — X11 owner-based, phải qua daemon |
+| Ghim (US-B4) | `x2clip pin` / `unpin` | ✅ |
+| Xoá (US-B5) | `x2clip rm <id>` | ✅ xoá được cả item đã ghim |
+| Tạm dừng sync (US-A4) | `x2clip pause` / `resume` / `status` | ✅ cờ file cạnh DB, `watch` đọc mỗi vòng nên có tác dụng ngay |
+| Tray + phím tắt (US-C1, US-C2) | — | ⬜ chưa chọn thư viện GUI |
+
+`copy` không set được cờ chống dội (cờ nằm trong `Watcher` của tiến trình
+`watch` khác), nên item copy lại **có** được gửi sang máy kia. Không đẻ row mới
+(`hash` UNIQUE) — cố ý để vậy: copy lại tức là muốn nó sang bên kia.
 
 **Exit criteria**
 - [ ] Chạy thật trên **cả hai** OS, không chỉ macOS
