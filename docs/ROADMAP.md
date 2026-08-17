@@ -4,7 +4,9 @@
 
 Không có deadline — đây là project cá nhân. Thứ tự thì có, và nó **có ràng buộc**: mỗi phase phải chạy được và đóng được exit criteria trước khi qua phase sau.
 
-**Trạng thái hiện tại:** Phase 0 ✅ xong. 0.1, 0.2, 0.3 đều pass ([PRD Q1, Q2](PRD.md#9-câu-hỏi-mở): NixOS chạy **X11**, không DE; Tailscale `nixos` ↔ `macbook` ping trực tiếp 6ms; `arboard` đọc/ghi text + ảnh OK cả hai máy). Tiếp theo: **Phase 1**.
+**Trạng thái hiện tại (2026-08-17):** Phase 0 ✅. Phase 1 🟡 code xong, còn chờ chạy thử NixOS. Phase 2 🟡 code + 11 test xanh trên hộp thư giả, **chưa gọi R2 thật lần nào**. Việc kế tiếp không phải viết code mà là [4 mục checklist R2](#phase-2--hộp-thư-r2--mã-hoá--) — tạo bucket, access key, lifecycle, tra giá. Sau đó chọn giữa **Phase 2b** (chuông Tailscale, tuỳ chọn) và **pause của [US-A4](USER-STORIES.md#us-a4--tạm-dừng-sync)** (docs đã tả, code chưa có).
+
+Phase 0 chi tiết: 0.1, 0.2, 0.3 đều pass ([PRD Q1, Q2](PRD.md#9-câu-hỏi-mở): NixOS chạy **X11**, không DE; Tailscale `nixos` ↔ `macbook` ping trực tiếp 6ms; `arboard` đọc/ghi text + ảnh OK cả hai máy).
 
 **Đổi kiến trúc 2026-08-17:** hai máy **ít khi online cùng lúc** (mac ở công ty, nixos ở nhà). Nội dung giờ đi qua hộp thư R2 thay vì P2P Tailscale — [ADR-0006](ADR/0006-r2-mailbox-store-and-forward.md). Phase 2 viết lại; Phase 1 không đổi.
 
@@ -109,11 +111,21 @@ Việc chính:
 
 Code xong: `core/src/{crypto,config,mailbox,sync}.rs`, bảng `seen`, `x2clip watch` gọi cả hai nhịp. 11 test Phase 2 xanh trên **hộp thư giả trong process**.
 
+Rà lại sau khi code xong, đã siết bốn chỗ (commit `6ab908a`) và hai chỗ nữa (`94566ba`):
+- `MailboxConfig` impl `Debug` viết tay che access key; T12 có assert `format!("{cfg:?}")` để nó không lặng lẽ mất tác dụng lúc ai đó thêm lại `derive(Debug)`
+- File secret rộng hơn `0600` → **từ chối chạy** ([US-C5](USER-STORIES.md#us-c5--cấu-hình-được), [N18c](NFR.md#4-bảo-mật)), kiểm **trước** khi parse, áp cho **cả** `config.toml` **và** `passphrase_file`. Tạo file bằng `OpenOptions().mode(0o600)` để không hở khoảnh khắc world-readable
+- `passphrase_file` nở `~` — file mẫu tự gợi ý `~/.config/x2clip/...` mà TOML không bung hộ
+- `machine == peer` (hoặc còn là tên mẫu) + đã bật `[mailbox]` → từ chối load. Máy tự gửi cho chính nó là vòng lặp hiện ra dưới dạng **hoá đơn R2**, không phải app treo
+
 Còn lại, đều là việc cần bucket thật hoặc máy thật:
-- 4 mục checklist "trước khi viết dòng code đầu" ở trên — chưa làm cái nào
+- 4 mục checklist "trước khi viết dòng code đầu" ở trên — chưa làm cái nào. **Đây là việc kế tiếp**, không phải viết thêm code
 - `R2Mailbox` (rusty-s3 + ureq) **chưa từng gọi R2 thật một lần nào**
 - Chạy thử hai máy, kể cả trường hợp tắt B rồi bật lại
 - Đo N1b/N1c
+
+Hai đầu dây chưa quyết:
+- **[US-A4](USER-STORIES.md#us-a4--tạm-dừng-sync) pause** — [T16](TEST-PLAN.md) đòi item copy lúc tạm dừng không được PUT. `SYNC_KHONG_GUI` đã có trong `store.rs`, nhưng `x2clip watch` chưa có đường bật/tắt nào. Docs đi trước code ở chỗ này
+- **Phase 2b** — chuông Tailscale, [ADR-0006 § 6b](ADR/0006-r2-mailbox-store-and-forward.md#6b--tailscale-hạ-cấp-thành-kênh-thông-báo) nói làm sau khi hộp thư đã chạy thật
 
 Chốt mã hoá, lệch với chữ nghĩa của [N18b](NFR.md#4-bảo-mật) (chỗ đó gợi ý `age` trước): dùng `dryoc` (libsodium thuần Rust) — Argon2id tham số mặc định → khoá 32 byte → `crypto_secretbox` mỗi message. Recipient passphrase của `age` chạy scrypt **mỗi message**, ~1s CPU cho mỗi lần copy, vỡ N1b lẫn N9; mà [N18f](NFR.md#4-bảo-mật) vốn đã chốt dẫn xuất bằng Argon2id nên dẫn xuất một lần rồi AEAD từng message mới đúng ý. Vẫn là thư viện có kiểm chứng, vẫn không tự lắp primitive — đúng tinh thần [ADR-0005 C1](ADR/0005-no-app-layer-crypto.md).
 
