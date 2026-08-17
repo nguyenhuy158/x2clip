@@ -6,6 +6,8 @@ Không có deadline — đây là project cá nhân. Thứ tự thì có, và n�
 
 **Trạng thái hiện tại:** Phase 0 ✅ xong. 0.1, 0.2, 0.3 đều pass ([PRD Q1, Q2](PRD.md#9-câu-hỏi-mở): NixOS chạy **X11**, không DE; Tailscale `nixos` ↔ `macbook` ping trực tiếp 6ms; `arboard` đọc/ghi text + ảnh OK cả hai máy). Tiếp theo: **Phase 1**.
 
+**Đổi kiến trúc 2026-08-17:** hai máy **ít khi online cùng lúc** (mac ở công ty, nixos ở nhà). Nội dung giờ đi qua hộp thư R2 thay vì P2P Tailscale — [ADR-0006](ADR/0006-r2-mailbox-store-and-forward.md). Phase 2 viết lại; Phase 1 không đổi.
+
 ---
 
 ## Phase 0 — Spike · ✅ Xong
@@ -61,27 +63,61 @@ Hai điều phát hiện thêm, ảnh hưởng thiết kế:
 - [ ] Copy hai lần cùng nội dung → một entry, `updated_at` được cập nhật
 - [ ] CPU lúc rảnh đạt [N9](NFR.md#2-tài-nguyên)
 
-## Phase 2 — Sync text giữa hai máy · ⬜
+## Phase 2 — Hộp thư R2 + mã hoá · ⬜
 
 **Story:** [US-A1](USER-STORIES.md#us-a1--copy-ở-máy-này-paste-ở-máy-kia), [US-A2](USER-STORIES.md#us-a2--không-có-vòng-lặp-echo), [US-C5](USER-STORIES.md#us-c5--cấu-hình-được)
 
-**Phạm vi:** `peer.rs`, `config.rs`, nối vào watcher. **Text only** — ảnh để phase sau.
+**Phạm vi:** `crypto.rs`, `mailbox.rs`, `config.rs`, bảng `seen`, nối vào watcher. **Text only** — ảnh để phase sau.
 
-- Listen bind vào IP Tailscale, dial peer, reconnect backoff
-- Chỉ nhận peer trong config
-- Echo guard đi qua đường mạng thật
+Kiến trúc: [ADR-0006](ADR/0006-r2-mailbox-store-and-forward.md). Hai máy **không** cần cùng online.
 
-**Deliverable:** copy ở máy này paste được ở máy kia.
+**Trước khi viết dòng code đầu** ([ADR-0006 § Checklist](ADR/0006-r2-mailbox-store-and-forward.md)):
+- [ ] Tạo bucket R2 + access key giới hạn đúng bucket đó
+- [ ] Sinh khoá mã hoá, copy tay sang hai máy, `chmod 0600`, xác nhận không nằm trong `git status`
+- [ ] Đặt lifecycle rule 30 ngày cho prefix `inbox/`
+- [ ] Tra bảng giá R2 để chốt chu kỳ poll ([N13b](NFR.md#3-giới-hạn))
+
+> Chép secret bằng tay ở đây là **cách tạm cho v1 hai máy**. [ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md) thay nó bằng đăng nhập + passphrase sau v1 — nên đừng nhúng access key vào code, đọc từ config/Keychain ngay từ đầu.
+
+Việc chính:
+- Mã hoá **trước** khi PUT, giải mã sau khi GET ([ADR-0005 C1–C6](ADR/0005-no-app-layer-crypto.md#xem-lại-2026-08-17--mã-hoá-tầng-app-thành-bắt-buộc))
+- PUT vào `inbox/<máy kia>/<ulid>`; LIST/GET/DELETE prefix của mình
+- Poll định kỳ + poll khi vừa bật máy / vừa có mạng
+- Chỉ item `ts` lớn nhất trong lô được ghi clipboard; cả lô vào history
+- Echo guard đi qua đường thật
+
+**Deliverable:** copy ở máy này, paste được ở máy kia — **kể cả khi lúc copy máy kia đang tắt**.
 
 **Exit criteria**
 - [ ] Sync hai chiều chạy trên hai máy thật
+- [ ] **Copy ở A khi B tắt → bật B lên thì nhận được.** Đây là lý do phase này tồn tại
 - [ ] **Echo loop = 0 message dư** ([N7](NFR.md#1-ngưỡng-chấp-nhận)) — có automated test, không chỉ thử tay
 - [ ] Trễ đạt [N1](NFR.md#1-ngưỡng-chấp-nhận)
-- [ ] Rút mạng rồi cắm lại → tự reconnect trong [N4](NFR.md#1-ngưỡng-chấp-nhận), không mất item
+- [ ] Round-trip mã hoá → giải mã pass trên **cả hai** OS
+- [ ] Sửa 1 byte ciphertext → giải mã **fail**, object **không** bị xoá
+- [ ] Object mã khoá khác → fail sạch, daemon không crash
+- [ ] Không log nội dung clipboard, khoá, access key ([N23](NFR.md#4-bảo-mật))
+- [ ] Mất mạng lúc copy → item vẫn trong `store`, có mạng lại thì PUT lên, không mất
+- [ ] DELETE fail → object không bị xử lý hai lần (sổ `seen`), clipboard không bị ghi đè bằng item cũ
 - [ ] Unicode/emoji/xuống dòng giống byte-for-byte
 - [ ] Config sai cú pháp → báo lỗi rõ, không ghi đè file người dùng
 
 > Đây là phase quan trọng nhất. Xong phase 2 là app đã có giá trị thật, phần còn lại là tiện nghi.
+
+## Phase 2b — Kênh chuông Tailscale · ⬜ tuỳ chọn
+
+**Phạm vi:** `notify.rs`. Không chặn phase nào. Bỏ hẳn cũng được — mất tốc độ, không mất đúng.
+
+Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức [N1](NFR.md#1-ngưỡng-chấp-nhận) khi cả hai máy đang bật.
+
+- WebSocket chở **object key**, ~100 byte, **không** chở nội dung ([ADR-0006 § 6b](ADR/0006-r2-mailbox-store-and-forward.md#6b--tailscale-hạ-cấp-thành-kênh-thông-báo))
+- Nhận key → chạy đúng luồng ingest của Phase 2, không thêm code path thứ hai
+
+**Exit criteria**
+- [ ] Bind **chỉ** vào địa chỉ Tailscale ([N19](NFR.md#4-bảo-mật)); không tìm được địa chỉ → **từ chối listen**, không fallback `0.0.0.0`
+- [ ] Chỉ nhận peer trong config ([N20](NFR.md#4-bảo-mật)), có [T10](TEST-PLAN.md#t10--peer-lạ-bị-từ-chối)
+- [ ] Tắt Tailscale → sync **vẫn chạy** qua poll, chỉ chậm hơn
+- [ ] Chuông trùng / key lạ → vô hại, `seen` chặn
 
 ## Phase 3 — Ảnh · ⬜
 
@@ -141,10 +177,13 @@ Chưa cam kết. Chỉ làm khi dùng thật rồi thấy thiếu:
 
 | Ý tưởng | Điều kiện kích hoạt |
 |---|---|
-| **Sync cả lịch sử giữa hai máy** — P2P qua Tailscale, merge rule ở [ADR-0004 § Xem lại](ADR/0004-storage-sqlite-local-history.md#xem-lại-2026-08-17--sync-lịch-sử) | **Đã muốn** (2026-08-17). Làm sau Phase 5, không chặn v1. |
-| Relay server (Cloudflare D1 / Durable Object) | Chỉ khi cần **store-and-forward**: copy ở A lúc B đang tắt. Kèm điều kiện bắt buộc: mã hoá tầng app trước khi lên cloud. D1 làm kho chính đã bị loại — xem ADR-0004. |
-| **Backup lên Cloudflare R2** — SQLite local vẫn là nguồn chân lý; R2 chỉ giữ bản copy. Bắt buộc: (1) mã hoá trước khi upload, key giữ local; (2) định kỳ ~1 lần/ngày, **không** realtime; (3) lỗi R2 thì log rồi bỏ qua, không chặn app. Cách làm: `sqlite3 .backup` → `age` → `PUT`. **D1 không dùng cho việc này** — backup là chép file, không phải query. | Mất history một lần và thấy tiếc. Trước đó `cp` file `.db` là đủ. |
-| Máy thứ 3+ | Có máy thứ ba |
+| ~~Sync cả lịch sử~~ | **Không còn là việc riêng.** Phase 2 đưa mọi item qua hộp thư → lịch sử tự hội tụ. Cần merge rule (ghim, xoá) thì lấy ở [ADR-0004 § Xem lại](ADR/0004-storage-sqlite-local-history.md#xem-lại-2026-08-17--sync-lịch-sử). |
+| ~~Relay server (D1 / Durable Object)~~ | **Đã giải bằng R2** ở [ADR-0006](ADR/0006-r2-mailbox-store-and-forward.md), không cần Worker. |
+| Xoá / ghim đồng bộ hai máy — tombstone + merge `pinned` bằng OR ([ADR-0004 § Xem lại](ADR/0004-storage-sqlite-local-history.md#quy-tắc-merge--trả-lời-các-câu-hỏi-adr-này-từng-nêu)) | Ghim hoặc xoá hai lần thấy khó chịu thật. Nội dung đã hội tụ; đây là phần *state* chưa. |
+| **Backup toàn bộ DB lên R2** — khác với hộp thư: hộp thư chở item lẻ và tự xoá sau 30 ngày, backup giữ cả file. `sqlite3 .backup` → mã hoá → PUT, ~1 lần/ngày, lỗi thì log rồi bỏ qua. | Mất history một lần và thấy tiếc. Trước đó `cp` file `.db` là đủ. |
+| **Đăng nhập + khoá từ passphrase** ([ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md)) — endpoint `auth`, credential R2 tạm thời theo prefix, Argon2id từ passphrase. FR16–FR19 ở [PRD](PRD.md#7-yêu-cầu-chức-năng) | **Đã quyết** (2026-08-17). Cần khi thêm máy thứ 3, hoặc khi chép secret tay thành phiền thật. Không chặn v1. |
+| Máy thứ 3+ | Có máy thứ ba. Cần [ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md) trước, và tính lại `recipient`: PUT vào N-1 hộp thư thay vì 1. |
+| Rotation khoá mã hoá | v1 không có. Mất khoá = mất hết ([ADR-0005 § Mô hình đe doạ](ADR/0005-no-app-layer-crypto.md#mô-hình-đe-doạ--cái-gì-được-bảo-vệ-cái-gì-không)). Cần khi có máy thứ 3 hoặc nghi khoá bị lộ. |
 | Watch path riêng cho Linux | Trễ 250ms thấy rõ khi dùng |
 | Rich text / RTF | Paste mất format gây khó chịu thật |
 | Mobile | Không dự kiến |
@@ -156,6 +195,7 @@ Chưa cam kết. Chỉ làm khi dùng thật rồi thấy thiếu:
 | 0 | — (spike kỹ thuật) |
 | 1 | US-B1, US-B2 (CLI) |
 | 2 | US-A1, US-A2, US-C5 |
+| 2b | — (tối ưu trễ, tuỳ chọn) |
 | 3 | US-A3, US-C4 |
 | 4 | US-A4, US-B2 (UI), US-B3, US-B4, US-B5, US-C1, US-C2 |
 | 5 | US-C3 |

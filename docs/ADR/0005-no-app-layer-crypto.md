@@ -1,9 +1,13 @@
 # ADR-0005 · Không mã hoá tầng app, dựa vào WireGuard
 
-**Trạng thái:** Accepted — **có điều kiện**
+**Trạng thái:** **Superseded by [ADR-0006](0006-r2-mailbox-store-and-forward.md)** (2026-08-17)
 **Ngày:** 2026-08-17
 
 Đây là ADR duy nhất trong tập này mà **sai là hỏng thật**. Đọc hết trước khi đổi transport.
+
+> **Điều kiện ở [§ Điều kiện](#điều-kiện--đọc-kỹ) đã kích hoạt — đúng như dự phòng.** Transport đổi sang hộp thư R2 ([ADR-0006](0006-r2-mailbox-store-and-forward.md)): dữ liệu **nằm trên đĩa của Cloudflare**, không còn chỉ đi giữa hai máy qua WireGuard. Chỗ dựa của [N18](../NFR.md#4-bảo-mật) mất.
+>
+> **Mã hoá tầng app giờ là BẮT BUỘC** — xem [§ Xem lại](#xem-lại-2026-08-17--mã-hoá-tầng-app-thành-bắt-buộc) ở cuối file. Phần thân ADR giữ nguyên để tra lịch sử; **đừng đọc nó như quyết định đang áp dụng.**
 
 ## Bối cảnh
 
@@ -66,3 +70,45 @@ Vì "app không tự biết mình đang không được bảo vệ" là chỗ h�
 - [ ] Không log nội dung clipboard ([N23](../NFR.md#4-bảo-mật)), có [T12](../TEST-PLAN.md#t12--không-log-nội-dung-clipboard)
 
 Điểm quan trọng nhất là dòng đầu: **fallback im lặng sang `0.0.0.0` sẽ biến quyết định này từ "hợp lý" thành "lỗ bảo mật"**, và không có gì nhìn thấy được để cảnh báo.
+
+---
+
+## Xem lại 2026-08-17 — mã hoá tầng app thành bắt buộc
+
+**Kích hoạt:** [ADR-0006](0006-r2-mailbox-store-and-forward.md). Clipboard giờ được lưu tạm trên R2 của Cloudflare. Điều kiện ghi ở [§ Điều kiện](#điều-kiện--đọc-kỹ) đã xảy ra: transport không còn là đường mã hoá đầu-cuối chỉ giữa hai máy mình.
+
+### Quyết định mới
+
+**Mã hoá payload ở tầng app trước khi `PUT` lên R2.** Không tuỳ chọn, không cờ bật/tắt.
+
+| # | Ràng buộc | Vì sao |
+|---|---|---|
+| C1 | Dùng thư viện đã kiểm chứng: **`age`** (X25519 + ChaCha20-Poly1305) hoặc libsodium sealed box. **Không** tự chọn cipher, tự sinh nonce, tự ghép primitive. | Chính lý do ADR này từng loại crypto tầng app: "crypto tự viết sai thì không kêu". Lý do đó vẫn đúng — nên dùng thư viện, không phải tự viết. |
+| C2 | Một khoá chia sẻ, sinh **một lần**, copy tay sang hai máy. Quyền `0600`. Không vào repo, không lên R2, không vào log. | Hai máy, một người. Key exchange qua mạng là bài toán không cần giải ở quy mô này. |
+| C3 | **AEAD, không phải chỉ mã hoá.** Ciphertext phải xác thực được — object bị sửa thì giải mã phải **fail**, không ra rác. | `age` và sealed box đều AEAD sẵn. Đây là lý do không dùng AES-CBC tự ghép. |
+| C4 | Giải mã fail → log + **giữ** object, không xoá, không ghi vào clipboard/store. | Fail có thể là bug của mình, không phải tấn công. Xoá là mất dữ liệu; ghi rác vào clipboard là tệ hơn. |
+| C5 | Access key R2 giữ trong Keychain (macOS) / file `0600` (NixOS). | Nó cho quyền ghi vào bucket. Không phải nội dung, nhưng vẫn là secret. |
+| C6 | Object key **không** chứa hash plaintext — dùng ULID random ([ADR-0006 § Object layout](0006-r2-mailbox-store-and-forward.md#object-layout)). | Hash trong tên object cho phép xác nhận nội dung đoán trước. Mã hoá body rồi để hash lộ ở tên file là vô nghĩa. |
+
+### Vẫn giữ từ quyết định cũ
+
+[N19](../NFR.md#4-bảo-mật) (bind chỉ vào địa chỉ Tailscale) và [N20](../NFR.md#4-bảo-mật) (whitelist peer) **vẫn bắt buộc** cho kênh thông báo ở [ADR-0006 § 6b](0006-r2-mailbox-store-and-forward.md#6b--tailscale-hạ-cấp-thành-kênh-thông-báo) — kể cả khi frame đó chỉ chứa object key chứ không chứa nội dung. Object key là thứ dùng để `GET`; để lộ ra `0.0.0.0` là mời người khác đọc hộp thư.
+
+Cấm fallback im lặng sang `0.0.0.0` vẫn nguyên giá trị.
+
+### Mô hình đe doạ — cái gì được bảo vệ, cái gì không
+
+| Chống được | Không chống được |
+|---|---|
+| Cloudflare (hoặc ai lấy được access key) đọc **nội dung** clipboard | Cloudflare thấy **metadata**: số item, thời điểm, kích thước từng item |
+| Object bị sửa trên đường / trên đĩa (AEAD phát hiện) | Kẻ đã vào được máy — đọc clipboard trực tiếp, không cần phá crypto |
+| Người bắt gói giữa app và R2 (TLS + AEAD) | Mất khoá mã hoá = mất hết. Không có recovery, không có rotation ở v1 |
+
+Rò rỉ metadata là đánh đổi **có ý thức**, ghi rõ ở [ADR-0006 § Ràng buộc bảo mật](0006-r2-mailbox-store-and-forward.md#ràng-buộc-bảo-mật--không-phải-tuỳ-chọn). Muốn bỏ luôn cả metadata thì phải bỏ cloud — quay về P2P, tức quay về vấn đề hai máy không cùng online.
+
+### Việc phải làm ở Phase 2 (thay danh sách cũ ở trên)
+- [ ] Sinh khoá, copy sang hai máy, `chmod 0600`, xác nhận không nằm trong `git status`
+- [ ] Mã hoá **trước** khi PUT; test round-trip mã hoá → giải mã trên **cả hai** OS
+- [ ] Test: sửa 1 byte trong ciphertext → giải mã phải fail, object không bị xoá
+- [ ] Test: object của người khác (khoá khác) → fail sạch, không crash daemon
+- [ ] Không log nội dung clipboard ([N23](../NFR.md#4-bảo-mật)), cũng không log khoá lẫn access key

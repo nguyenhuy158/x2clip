@@ -1,6 +1,6 @@
 # ADR-0006 · R2 làm hộp thư, Tailscale làm chuông
 
-**Trạng thái:** Accepted
+**Trạng thái:** Accepted — **§ Ràng buộc bảo mật hàng 2–3 bị [ADR-0007](0007-dang-nhap-va-khoa-tu-passphrase.md) supersede** (2026-08-17). Hộp thư, object layout và ràng buộc mã hoá giữ nguyên; chỉ **cách secret đến được máy** là đổi.
 **Ngày:** 2026-08-17
 **Supersede:** [ADR-0001](0001-transport-tailscale.md) (phần "Tailscale là đường truyền nội dung"), [ADR-0004 § 4b](0004-storage-sqlite-local-history.md) (phần "không sync lịch sử")
 **Kéo theo:** [ADR-0005](0005-no-app-layer-crypto.md) bị supersede — mã hoá tầng app trở thành **bắt buộc**
@@ -75,8 +75,8 @@ Chi tiết ở [ADR-0005 § Xem lại](0005-no-app-layer-crypto.md). Tóm:
 | # | Ràng buộc |
 |---|---|
 | 1 | **Mã hoá tầng app trước khi PUT.** Cloudflare không được đọc clipboard. Dùng thư viện đã kiểm chứng (`age` / libsodium), **không** tự ghép primitive. |
-| 2 | Khoá chia sẻ trước, copy tay sang hai máy, quyền `0600`, **không bao giờ** vào repo hay lên R2. |
-| 3 | Access key R2 cũng là secret — Keychain (macOS) / file `0600` (NixOS), không hardcode. |
+| ~~2~~ | ~~Khoá chia sẻ trước, copy tay sang hai máy~~ → **[ADR-0007 § 7b](0007-dang-nhap-va-khoa-tu-passphrase.md)**: khoá dẫn xuất từ passphrase, không chép tay. Phần "quyền `0600`, không bao giờ vào repo hay lên R2" **vẫn giữ**. |
+| ~~3~~ | ~~Access key R2 chép tay~~ → **[ADR-0007 § 7a](0007-dang-nhap-va-khoa-tu-passphrase.md)**: credential tạm thời lấy sau khi đăng nhập. Phần "là secret, Keychain / file `0600`, không hardcode" **vẫn giữ**. |
 | 4 | Giải mã lỗi → log + **giữ** object, không xoá. Object không giải được có thể là bug, không phải rác. |
 
 **Rò rỉ metadata phải chấp nhận:** Cloudflare thấy số item, thời điểm, và kích thước mỗi item. Không thấy nội dung. Với mô hình một người dùng đây là đánh đổi chấp nhận được — nhưng nó *có thật*.

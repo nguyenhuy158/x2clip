@@ -22,7 +22,7 @@ Mỗi thông tin chỉ có **một** file là nguồn chính. File khác muốn 
 
 ## Trạng thái
 
-**[Phase 0](ROADMAP.md#phase-0--spike--✅-xong) xong, chưa bắt đầu code.** Còn [Q3](PRD.md#9-câu-hỏi-mở) chưa chốt — mở [prototype](UI/prototype.html) xem rồi trả lời.
+**[Phase 0](ROADMAP.md#phase-0--spike--✅-xong) xong, chưa bắt đầu code.** [Q1–Q3](PRD.md#9-câu-hỏi-mở) đã chốt hết; tài liệu thiết kế UI xong ([UI/](UI/), mở [prototype](UI/prototype.html) để xem). Tiếp theo: [Phase 1](ROADMAP.md#phase-1--core-local-một-máy--).
 
 ## Quy tắc cập nhật
 

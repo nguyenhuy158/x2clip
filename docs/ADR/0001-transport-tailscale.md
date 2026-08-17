@@ -1,7 +1,12 @@
 # ADR-0001 · Dùng Tailscale làm transport, không tự dựng relay
 
-**Trạng thái:** Accepted
+**Trạng thái:** **Một phần Superseded by [ADR-0006](0006-r2-mailbox-store-and-forward.md)** (2026-08-17)
 **Ngày:** 2026-08-17
+
+> Giả định nền của ADR này — *hai máy cùng online* — đã được xác nhận **sai**: mac ở công ty, nixos ở nhà, ít khi mở cùng lúc. Đúng cái ADR này ghi ở § Mất ("Tailscale là mạng, không phải kho") đã thành vấn đề thật.
+>
+> **Còn hiệu lực:** không tự dựng relay; không tự làm identity / NAT traversal.
+> **Hết hiệu lực:** Tailscale chở nội dung clipboard. Nội dung giờ đi qua hộp thư R2; Tailscale hạ cấp thành kênh thông báo tuỳ chọn. Xem [ADR-0006](0006-r2-mailbox-store-and-forward.md).
 
 ## Bối cảnh
 

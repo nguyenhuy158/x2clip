@@ -78,6 +78,8 @@ Hệ quả trực tiếp người dùng thấy: xoá một item ở máy A **kh�
 
 **Kích hoạt:** chủ project muốn lịch sử dùng chung giữa hai máy, và đề xuất chuyển kho lưu trữ sang **Cloudflare D1**.
 
+> **Cập nhật cùng ngày, muộn hơn:** phần "sau v1" bên dưới đã lạc hậu. Sau khi biết hai máy **ít khi online cùng lúc**, kiến trúc chuyển sang hộp thư R2 ([ADR-0006](0006-r2-mailbox-store-and-forward.md)) — và khi đó lịch sử **tự hội tụ** như hệ quả phụ, không cần phase riêng. Sync P2P qua Tailscale mô tả dưới đây không còn là đường thực hiện. **Merge rule vẫn dùng nguyên.**
+
 ### Giữ 4a. Bỏ 4b — nhưng sau v1, và không dùng D1.
 
 **D1 bị loại làm kho chính:**
