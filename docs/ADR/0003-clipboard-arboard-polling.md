@@ -1,6 +1,6 @@
 # ADR-0003 · Một crate clipboard chung + poll cả hai OS
 
-**Trạng thái:** Accepted — **chờ [Phase 0](../ROADMAP.md#phase-0--spike--⬜-chặn-bởi-prd-q1) xác nhận**
+**Trạng thái:** Accepted — [Phase 0.2](../ROADMAP.md#kết-quả-02-2026-08-17) đã xác nhận: `arboard` đọc/ghi được text + ảnh trên cả macOS lẫn X11 trên nixos
 **Ngày:** 2026-08-17
 
 ## Bối cảnh

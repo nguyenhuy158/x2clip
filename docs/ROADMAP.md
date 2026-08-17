@@ -4,11 +4,11 @@
 
 Không có deadline — đây là project cá nhân. Thứ tự thì có, và nó **có ràng buộc**: mỗi phase phải chạy được và đóng được exit criteria trước khi qua phase sau.
 
-**Trạng thái hiện tại:** Phase 0 đang làm. 0.1 và 0.3 đã pass ([PRD Q1, Q2](PRD.md#9-câu-hỏi-mở) đã trả lời: NixOS chạy **X11**, không DE; Tailscale `nixos` ↔ `macbook` ping trực tiếp 6ms). Còn 0.2 — thử `arboard` đọc/ghi text + ảnh trên cả hai máy.
+**Trạng thái hiện tại:** Phase 0 ✅ xong. 0.1, 0.2, 0.3 đều pass ([PRD Q1, Q2](PRD.md#9-câu-hỏi-mở): NixOS chạy **X11**, không DE; Tailscale `nixos` ↔ `macbook` ping trực tiếp 6ms; `arboard` đọc/ghi text + ảnh OK cả hai máy). Tiếp theo: **Phase 1**.
 
 ---
 
-## Phase 0 — Spike · 🟡 Đang làm (0.1 ✅, 0.3 ✅, 0.2 còn lại)
+## Phase 0 — Spike · ✅ Xong
 
 **Mục đích:** xác nhận ba giả định có thể phá vỡ cả kế hoạch. Làm bằng script nhỏ, không đoán.
 
@@ -21,10 +21,24 @@ Không có deadline — đây là project cá nhân. Thứ tự thì có, và n�
 **Deliverable:** một ghi chú kết quả + ADR được cập nhật nếu có giả định sai.
 
 **Exit criteria**
-- [ ] Biết chính xác compositor và protocol nó hỗ trợ
-- [ ] Đọc *và* ghi được cả text lẫn ảnh trên **cả hai** máy, bằng tay
-- [ ] Mở được TCP giữa hai máy qua tên Tailscale
-- [ ] ADR nào bị chứng minh sai thì đã cập nhật
+- [x] Biết chính xác compositor và protocol nó hỗ trợ — X11 (Xorg 21.1.23), không DE
+- [x] Đọc *và* ghi được cả text lẫn ảnh trên **cả hai** máy, bằng tay
+- [x] Mở được TCP giữa hai máy qua tên Tailscale
+- [x] ADR nào bị chứng minh sai thì đã cập nhật — không cái nào sai, [ADR-0003](ADR/0003-clipboard-arboard-polling.md) chuyển sang Accepted
+
+### Kết quả 0.2 (2026-08-17)
+
+Spike: crate tạm `spikes/clip-probe` dùng `arboard` 3.6.1, đã xoá sau khi đo.
+
+| | text đọc | text ghi | ảnh đọc | ảnh ghi |
+|---|---|---|---|---|
+| macbook (macOS) | ✅ | ✅ | ✅ ảnh thật từ `screencapture` 400x240 | ✅ |
+| nixos (X11 `:0`) | ✅ | ✅ | ✅ | ✅ |
+
+Hai điều phát hiện thêm, ảnh hưởng thiết kế:
+
+1. **X11 clipboard là owner-based** — process ghi phải *còn sống* thì nội dung mới còn. Không phải vấn đề với daemon chạy nền, nhưng CLI kiểu `x2clip paste` một phát rồi thoát sẽ mất nội dung trên Linux. Ghi nhận cho [Phase 1](#phase-1--core-local-một-máy--).
+2. Máy nixos có **hai X display**: `:0` (thật) và `:10` (xrdp). Chỉ `:0` kết nối được; `:10` timeout. Daemon phải chốt `DISPLAY=:0`, đừng đoán từ env.
 
 > Đừng bỏ phase này vì "chắc chạy được". Phát hiện Wayland không cho đọc clipboard lúc đang viết UI là đắt gấp nhiều lần.
 
