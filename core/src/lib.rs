@@ -2,11 +2,18 @@
 //! Ngưỡng lấy từ docs/NFR.md.
 
 pub mod clip;
+pub mod config;
+pub mod crypto;
+pub mod mailbox;
 pub mod store;
+pub mod sync;
 pub mod watcher;
 
 pub use clip::{Clipboard, SystemClipboard};
+pub use config::Config;
+pub use mailbox::Mailbox;
 pub use store::{Item, Store};
+pub use sync::Syncer;
 pub use watcher::Watcher;
 
 use std::time::Duration;
@@ -18,6 +25,9 @@ pub const MAX_ITEMS: usize = 1000;
 pub const MAX_AGE_MS: i64 = 30 * 24 * 60 * 60 * 1000;
 /// N16 — item text tối đa 1 MB. Vượt thì bỏ qua + log, không cắt bớt.
 pub const MAX_TEXT_BYTES: usize = 1024 * 1024;
+/// Trần khi tải object về: 1 MB text + JSON + nonce/mac, cho rộng tay gấp bốn.
+/// Chặn ở đây để một object rác khổng lồ không nuốt hết RAM.
+pub const MAX_OBJECT_BYTES: usize = 4 * 1024 * 1024;
 
 /// Đường dẫn DB mặc định. Phase 2 (US-C5) mới cho cấu hình.
 pub fn default_db_path() -> anyhow::Result<std::path::PathBuf> {

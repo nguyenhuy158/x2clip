@@ -93,7 +93,10 @@ fn t4_prune_khong_dung_pinned() -> Result<()> {
 
     let ids: Vec<i64> = store.list(MAX_ITEMS + 10)?.iter().map(|i| i.id).collect();
     assert!(ids.contains(&pinned_id), "item đã ghim phải sống sót");
-    assert!(!ids.contains(&oldest_id), "item cũ nhất chưa ghim phải bị xoá");
+    assert!(
+        !ids.contains(&oldest_id),
+        "item cũ nhất chưa ghim phải bị xoá"
+    );
     assert_eq!(ids.len(), MAX_ITEMS + 1, "1000 chưa ghim + 1 đã ghim");
     Ok(())
 }

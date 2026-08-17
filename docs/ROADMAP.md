@@ -66,7 +66,7 @@ Hai điều phát hiện thêm, ảnh hưởng thiết kế:
 
 Ghi chú: chưa có `x2clip copy <id>` — trên X11 clipboard là owner-based, tiến trình ghi rồi thoát là mất nội dung. Dùng lại item là việc của daemon ở [Phase 4](#phase-4--ui--).
 
-## Phase 2 — Hộp thư R2 + mã hoá · ⬜
+## Phase 2 — Hộp thư R2 + mã hoá · 🟡 (code + test xong, chờ bucket thật)
 
 **Story:** [US-A1](USER-STORIES.md#us-a1--copy-ở-máy-này-paste-ở-máy-kia), [US-A2](USER-STORIES.md#us-a2--không-có-vòng-lặp-echo), [US-C5](USER-STORIES.md#us-c5--cấu-hình-được)
 
@@ -93,17 +93,31 @@ Việc chính:
 
 **Exit criteria**
 - [ ] Sync hai chiều chạy trên hai máy thật
-- [ ] **Copy ở A khi B tắt → bật B lên thì nhận được.** Đây là lý do phase này tồn tại
-- [ ] **Echo loop = 0 message dư** ([N7](NFR.md#1-ngưỡng-chấp-nhận)) — có automated test, không chỉ thử tay
-- [ ] Trễ đạt [N1](NFR.md#1-ngưỡng-chấp-nhận)
-- [ ] Round-trip mã hoá → giải mã pass trên **cả hai** OS
-- [ ] Sửa 1 byte ciphertext → giải mã **fail**, object **không** bị xoá
-- [ ] Object mã khoá khác → fail sạch, daemon không crash
-- [ ] Không log nội dung clipboard, khoá, access key ([N23](NFR.md#4-bảo-mật))
-- [ ] Mất mạng lúc copy → item vẫn trong `store`, có mạng lại thì PUT lên, không mất
-- [ ] DELETE fail → object không bị xử lý hai lần (sổ `seen`), clipboard không bị ghi đè bằng item cũ
-- [ ] Unicode/emoji/xuống dòng giống byte-for-byte
-- [ ] Config sai cú pháp → báo lỗi rõ, không ghi đè file người dùng
+- [ ] **Copy ở A khi B tắt → bật B lên thì nhận được.** Đây là lý do phase này tồn tại — T11 xanh trên hộp thư giả, còn chờ máy thật
+- [x] **Echo loop = 0 message dư** ([N7](NFR.md#1-ngưỡng-chấp-nhận)) — T2, T3 trong `core/tests/phase2.rs`
+- [ ] Trễ đạt [N1](NFR.md#1-ngưỡng-chấp-nhận) — đo được khi có bucket thật
+- [ ] Round-trip mã hoá → giải mã pass trên **cả hai** OS — T6 xanh trên macOS, chưa chạy NixOS
+- [x] Sửa 1 byte ciphertext → giải mã **fail**, object **không** bị xoá — T14
+- [x] Object mã khoá khác → fail sạch, daemon không crash — T14
+- [x] Không log nội dung clipboard, khoá, access key ([N23](NFR.md#4-bảo-mật)) — T12
+- [x] Mất mạng lúc copy → item vẫn trong `store`, có mạng lại thì PUT lên, không mất — T16
+- [x] DELETE fail → object không bị xử lý hai lần (sổ `seen`), clipboard không bị ghi đè bằng item cũ — T13
+- [x] Unicode/emoji/xuống dòng giống byte-for-byte — T6
+- [x] Config sai cú pháp → báo lỗi rõ, không ghi đè file người dùng — T9
+
+### Trạng thái 2026-08-17
+
+Code xong: `core/src/{crypto,config,mailbox,sync}.rs`, bảng `seen`, `x2clip watch` gọi cả hai nhịp. 11 test Phase 2 xanh trên **hộp thư giả trong process**.
+
+Còn lại, đều là việc cần bucket thật hoặc máy thật:
+- 4 mục checklist "trước khi viết dòng code đầu" ở trên — chưa làm cái nào
+- `R2Mailbox` (rusty-s3 + ureq) **chưa từng gọi R2 thật một lần nào**
+- Chạy thử hai máy, kể cả trường hợp tắt B rồi bật lại
+- Đo N1b/N1c
+
+Chốt mã hoá, lệch với chữ nghĩa của [N18b](NFR.md#4-bảo-mật) (chỗ đó gợi ý `age` trước): dùng `dryoc` (libsodium thuần Rust) — Argon2id tham số mặc định → khoá 32 byte → `crypto_secretbox` mỗi message. Recipient passphrase của `age` chạy scrypt **mỗi message**, ~1s CPU cho mỗi lần copy, vỡ N1b lẫn N9; mà [N18f](NFR.md#4-bảo-mật) vốn đã chốt dẫn xuất bằng Argon2id nên dẫn xuất một lần rồi AEAD từng message mới đúng ý. Vẫn là thư viện có kiểm chứng, vẫn không tự lắp primitive — đúng tinh thần [ADR-0005 C1](ADR/0005-no-app-layer-crypto.md).
+
+Một cái bẫy đã gặp khi thiết kế, ghi ra đây trước khi nó cắn lúc chạy hai máy: **salt phải copy y hệt sang máy kia** cùng với passphrase. Cùng passphrase + khác salt = khác khoá, và triệu chứng trông hệt như sai passphrase. File config mẫu có sẵn cảnh báo này ngay trên dòng `salt`.
 
 > Đây là phase quan trọng nhất. Xong phase 2 là app đã có giá trị thật, phần còn lại là tiện nghi.
 
