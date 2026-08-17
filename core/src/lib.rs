@@ -25,9 +25,16 @@ pub const MAX_ITEMS: usize = 1000;
 pub const MAX_AGE_MS: i64 = 30 * 24 * 60 * 60 * 1000;
 /// N16 — item text tối đa 1 MB. Vượt thì bỏ qua + log, không cắt bớt.
 pub const MAX_TEXT_BYTES: usize = 1024 * 1024;
-/// Trần khi tải object về: 1 MB text + JSON + nonce/mac, cho rộng tay gấp bốn.
-/// Chặn ở đây để một object rác khổng lồ không nuốt hết RAM.
-pub const MAX_OBJECT_BYTES: usize = 4 * 1024 * 1024;
+/// N15 — item ảnh tối đa 5 MB (đo trên PNG đã chuẩn hoá). Vượt thì **vẫn vào
+/// lịch sử local**, đánh dấu không sync (US-A3), không cắt, không resize.
+pub const MAX_IMAGE_BYTES: usize = 5 * 1024 * 1024;
+/// Cạnh dài nhất của thumbnail.
+pub const THUMB_MAX_EDGE: u32 = 128;
+/// Trần khi tải object về. Ảnh N15 5 MB đi trong JSON dưới dạng hex nên nở gấp
+/// đôi; 16 MB cho rộng tay phần nonce/mac/JSON.
+/// ponytail: hex chứ không base64 — `hex` đã có sẵn, base64 chỉ tiết kiệm 33%
+/// băng thông. Đổi khi nào hoá đơn R2 thấy được.
+pub const MAX_OBJECT_BYTES: usize = 16 * 1024 * 1024;
 
 /// Đường dẫn DB mặc định. Phase 2 (US-C5) mới cho cấu hình.
 pub fn default_db_path() -> anyhow::Result<std::path::PathBuf> {

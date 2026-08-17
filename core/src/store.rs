@@ -69,6 +69,11 @@ impl Store {
     fn init(conn: Connection) -> Result<Self> {
         conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")?;
         conn.execute_batch(SCHEMA)?;
+        // Cột PNG đầy đủ, thêm sau Phase 1 nên phải ALTER cho DB đã tồn tại.
+        // Cố ý tách khỏi `body`: `list()` SELECT body của mọi row, để ảnh ở đó
+        // là mỗi lần `x2clip list` nạp cả chục MB vào RAM (N10).
+        // Chạy lần hai báo "duplicate column" — đúng như mong đợi, nuốt luôn.
+        let _ = conn.execute("ALTER TABLE items ADD COLUMN blob BLOB", []);
         Ok(Self { conn })
     }
 
@@ -97,6 +102,54 @@ impl Store {
                 Ok((self.conn.last_insert_rowid(), true))
             }
         }
+    }
+
+    /// Ghi một item ảnh. `body` để NULL và preview đi vào `body` dạng chữ
+    /// (`"ảnh 1920x1080"`) để `x2clip list` in được mà không phải đọc blob.
+    ///
+    /// `synced` truyền vào chứ không mặc định 0: ảnh vượt N15 phải vào lịch sử
+    /// local với `SYNC_KHONG_GUI` (US-A3) — nếu để 0 nó sẽ nằm mãi trong hàng
+    /// chờ, mỗi vòng poll lại thử PUT một lần rồi lại hỏng.
+    pub fn upsert_image(
+        &self,
+        hash: &str,
+        mo_ta: &str,
+        png: &[u8],
+        thumb: &[u8],
+        synced: i64,
+        ts: i64,
+    ) -> Result<(i64, bool)> {
+        let existing: Option<i64> = self
+            .conn
+            .query_row("SELECT id FROM items WHERE hash = ?1", [hash], |r| r.get(0))
+            .ok();
+        match existing {
+            Some(id) => {
+                self.conn.execute(
+                    "UPDATE items SET updated_at = MAX(updated_at, ?1) WHERE id = ?2",
+                    params![ts, id],
+                )?;
+                Ok((id, false))
+            }
+            None => {
+                self.conn.execute(
+                    "INSERT INTO items (kind, hash, body, blob, thumb, created_at, updated_at, synced)
+                     VALUES ('image', ?1, ?2, ?3, ?4, ?5, ?5, ?6)",
+                    params![hash, mo_ta, png, thumb, ts, synced],
+                )?;
+                Ok((self.conn.last_insert_rowid(), true))
+            }
+        }
+    }
+
+    /// PNG đầy đủ của một item ảnh. Chỉ gọi khi thật sự cần gửi đi — đây là
+    /// chỗ duy nhất nạp cả bức ảnh vào RAM.
+    pub fn lay_blob(&self, id: i64) -> Result<Option<Vec<u8>>> {
+        Ok(self
+            .conn
+            .query_row("SELECT blob FROM items WHERE id = ?1", [id], |r| r.get(0))
+            .ok()
+            .flatten())
     }
 
     /// N14 — cắt theo tuổi rồi theo số lượng. Item đã ghim **không bao giờ** bị
@@ -188,7 +241,7 @@ impl Store {
     pub fn cho_gui(&self) -> Result<Vec<Item>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, kind, COALESCE(body, ''), created_at, updated_at, pinned
-             FROM items WHERE synced = ?1 AND kind = 'text' ORDER BY updated_at ASC, id ASC",
+             FROM items WHERE synced = ?1 ORDER BY updated_at ASC, id ASC",
         )?;
         let rows = stmt.query_map([SYNC_CHO_GUI], |r| {
             Ok(Item {

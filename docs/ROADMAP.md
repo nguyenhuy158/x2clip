@@ -148,7 +148,7 @@ Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức
 - [ ] Tắt Tailscale → sync **vẫn chạy** qua poll, chỉ chậm hơn
 - [ ] Chuông trùng / key lạ → vô hại, `seen` chặn
 
-## Phase 3 — Ảnh · ⬜
+## Phase 3 — Ảnh · 🟡
 
 **Story:** [US-A3](USER-STORIES.md#us-a3--đồng-bộ-ảnh), [US-C4](USER-STORIES.md#us-c4--không-lưu-password)
 
@@ -159,10 +159,14 @@ Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức
 
 **Exit criteria**
 - [ ] Screenshot macOS → paste được ở NixOS, cùng kích thước pixel
+      (round-trip nguyên byte đã xanh trên hộp thư giả — `phase3.rs`; còn thiếu
+      hai máy thật, cùng chỗ tắc với Phase 2)
 - [ ] Chiều ngược lại cũng được
 - [ ] Trễ đạt [N2](NFR.md#1-ngưỡng-chấp-nhận)
-- [ ] Ảnh vượt giới hạn → vào lịch sử local, đánh dấu không sync, không crash
-- [ ] Password từ password manager (macOS) không vào lịch sử
+- [x] Ảnh vượt giới hạn → vào lịch sử local, đánh dấu không sync, không crash
+- [x] Password từ password manager (macOS) không vào lịch sử
+      (`org.nspasteboard.ConcealedType`; test dùng clipboard giả, còn thiếu
+      một lần thử tay với password manager thật)
 - [ ] RAM đạt [N10](NFR.md#2-tài-nguyên) sau khi sync ~20 ảnh
 
 ## Phase 4 — UI · ⬜

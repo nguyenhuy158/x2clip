@@ -25,6 +25,13 @@ impl Clipboard for FakeClipboard {
         self.text = Some(text.to_string());
         Ok(())
     }
+    // Phase 1 chỉ có text; ảnh nằm ở phase3.rs với fake riêng.
+    fn get_image(&mut self) -> Option<x2clip_core::clip::Anh> {
+        None
+    }
+    fn set_image(&mut self, _: &x2clip_core::clip::Anh) -> Result<()> {
+        unreachable!("test phase 1 không ghi ảnh")
+    }
 }
 
 /// T1 — echo guard: nội dung do chính app ghi vào clipboard không được

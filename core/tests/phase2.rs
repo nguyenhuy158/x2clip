@@ -111,6 +111,13 @@ impl Clipboard for FakeClipboard {
         self.text = Some(text.to_string());
         Ok(())
     }
+    // Phase 2 chỉ có text; ảnh nằm ở phase3.rs với fake riêng.
+    fn get_image(&mut self) -> Option<x2clip_core::clip::Anh> {
+        None
+    }
+    fn set_image(&mut self, _: &x2clip_core::clip::Anh) -> Result<()> {
+        unreachable!("test phase 2 không ghi ảnh")
+    }
 }
 
 fn thu_muc_tam(ten: &str) -> std::path::PathBuf {
@@ -136,7 +143,10 @@ fn t2_mot_chieu_khong_bong_ban() -> Result<()> {
     assert_eq!(mb.keys_voi_prefix("inbox/B/").len(), 1);
     assert_eq!(mb.keys_voi_prefix("inbox/A/").len(), 0);
 
-    assert_eq!(b.ingest(&store_b)?.as_deref(), Some("gửi đi"));
+    assert_eq!(
+        b.ingest(&store_b)?.as_ref().and_then(|n| n.text()),
+        Some("gửi đi")
+    );
     // Item nhận về không bao giờ được xếp vào hàng chờ gửi.
     assert_eq!(b.push_pending(&store_b)?, 0, "B không được PUT ngược lại");
     assert_eq!(mb.keys_voi_prefix("inbox/A/").len(), 0);
@@ -170,7 +180,7 @@ fn t3_echo_guard_tren_duong_that() -> Result<()> {
 
     let mut w = Watcher::new(FakeClipboard::default(), Store::open_memory()?);
     let nhan = b.ingest(w.store())?.expect("phải có item");
-    w.apply_remote(&nhan)?;
+    w.apply_remote(nhan.text().expect("phải là text"))?;
 
     assert_eq!(w.tick()?, None, "echo không được thành item mới");
     let truoc = mb.so_lan_put.load(Ordering::SeqCst);
@@ -349,7 +359,11 @@ fn t11_ba_copy_khi_b_dang_tat() -> Result<()> {
     a.push_pending(&store_a)?;
 
     // B bật lên, poll một nhịp.
-    assert_eq!(b.ingest(&store_b)?.as_deref(), Some("ba"), "chỉ mới nhất");
+    assert_eq!(
+        b.ingest(&store_b)?.as_ref().and_then(|n| n.text()),
+        Some("ba"),
+        "chỉ mới nhất"
+    );
     assert_eq!(store_b.count()?, 3, "cả ba vào lịch sử — N8, 0 mất mát");
     assert_eq!(b.push_pending(&store_b)?, 0);
     assert_eq!(mb.keys_voi_prefix("inbox/A/").len(), 0);
@@ -370,7 +384,10 @@ fn t13_delete_hong_khong_xu_ly_lai() -> Result<()> {
     let b = syncer(mb.clone(), "B", "A");
     let store_b = Store::open_memory()?;
 
-    assert_eq!(b.ingest(&store_b)?.as_deref(), Some("chỉ một lần"));
+    assert_eq!(
+        b.ingest(&store_b)?.as_ref().and_then(|n| n.text()),
+        Some("chỉ một lần")
+    );
     assert_eq!(store_b.count()?, 1);
 
     // B copy cái mới hơn ở local, rồi poll lại: object cũ vẫn nằm đó.

@@ -18,6 +18,15 @@ ulid = "3.0.0"
 hex = "0.4.3"
 serde = { version = "1.0.229", features = ["derive"] }
 ureq = "3.4.0"
+png = "0.17"
+
+# N22 — arboard không cho đọc type tuỳ ý của pasteboard, mà cả tiêu chí
+# "password từ password manager không vào lịch sử" nằm ở đúng chỗ đó. Cùng
+# version objc2 với arboard nên không thêm cây phụ thuộc thứ hai.
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", features = ["NSPasteboard"] }
+objc2-foundation = "0.3"
 
 [dev-dependencies]
 serde_json = "1.0.151"

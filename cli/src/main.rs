@@ -6,6 +6,7 @@ use anyhow::{bail, Result};
 use x2clip_core::config::default_config_path;
 use x2clip_core::crypto::derive_key;
 use x2clip_core::mailbox::R2Mailbox;
+use x2clip_core::sync::NhanVe;
 use x2clip_core::{
     default_db_path, store::Item, Config, Store, Syncer, SystemClipboard, Watcher, POLL_INTERVAL,
 };
@@ -95,9 +96,13 @@ fn watch(store: Store) -> Result<()> {
                     eprintln!("x2clip: chưa gửi được, giữ hàng chờ: {e}");
                 }
                 match s.ingest(w.store()) {
-                    // Set cờ echo trước khi ghi clipboard — `apply_remote` lo.
-                    Ok(Some(text)) => {
-                        if let Err(e) = w.apply_remote(&text) {
+                    // Set cờ echo trước khi ghi clipboard — `apply_remote*` lo.
+                    Ok(Some(nhan)) => {
+                        let r = match &nhan {
+                            NhanVe::Text(t) => w.apply_remote(t),
+                            NhanVe::Anh(a) => w.apply_remote_image(a),
+                        };
+                        if let Err(e) = r {
                             eprintln!("x2clip: không ghi được clipboard: {e}");
                         }
                     }
