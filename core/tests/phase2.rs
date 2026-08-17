@@ -469,6 +469,19 @@ fn t12_khong_ro_bi_mat() -> Result<()> {
     // Thông báo lỗi giải mã cũng không được nhắc tới passphrase.
     let err = khoa().decrypt(&[0u8; 50]).unwrap_err().to_string();
     assert!(!err.contains(PASSPHRASE));
+
+    // `{cfg:?}` ở một nhánh lỗi nào đó là đủ để đưa access key vào log. Impl
+    // Debug viết tay che nó — không có assert này thì nó lặng lẽ mất tác dụng
+    // ngay lúc ai đó thêm lại `derive(Debug)`.
+    let mb_cfg = x2clip_core::config::MailboxConfig {
+        endpoint: "https://x.r2.cloudflarestorage.com".to_string(),
+        bucket: "b".to_string(),
+        region: "auto".to_string(),
+        access_key_id: "AKIA-LO-RA-DAY".to_string(),
+        secret_access_key: "SECRET-LO-RA-DAY".to_string(),
+    };
+    let d = format!("{mb_cfg:?}");
+    assert!(!d.contains("LO-RA-DAY"), "Debug làm lộ secret: {d}");
     Ok(())
 }
 

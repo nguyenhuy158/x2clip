@@ -26,10 +26,12 @@ CREATE TABLE IF NOT EXISTS seen (
 
 /// Trạng thái của `items.synced`.
 ///
-/// Lệch với chữ nghĩa của T7 (chỗ đó viết item quá cỡ để `synced = 0`): T16
-/// đòi phân biệt được "đang xếp hàng chờ gửi" với "không bao giờ gửi", mà
-/// dùng chung số 0 thì item quá cỡ sẽ bị retry vĩnh viễn. T16 cụ thể hơn nên
-/// thắng.
+/// Lệch với chữ nghĩa của T7 (chỗ đó chỉ có 0/1): item nhận từ hộp thư phải
+/// **không bao giờ** được PUT ngược lại, mà hàng chờ lại sống trong DB qua
+/// restart (T16) nên cờ chống dội cũng phải nằm trong DB. Dùng chung số 0 thì
+/// mọi item nhận về sẽ bị gửi lại ngay sau lần khởi động kế tiếp.
+///
+/// Item quá cỡ N16 không tới được đây: `Watcher::tick` chặn từ trước khi ghi DB.
 pub const SYNC_CHO_GUI: i64 = 0;
 pub const SYNC_DA_GUI: i64 = 1;
 pub const SYNC_KHONG_GUI: i64 = 2;

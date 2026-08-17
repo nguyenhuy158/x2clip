@@ -215,6 +215,10 @@ impl Config {
                 anyhow!("chưa có passphrase: đặt $X2CLIP_PASSPHRASE hoặc crypto.passphrase_file")
             })?;
         let f = no_dau_ngã(f);
+        // Cùng US-C5 với config.toml, và file này còn nặng hơn: khoá dẫn xuất
+        // từ đúng nó. Siết một nửa điều khoản còn tệ hơn không siết, vì nó
+        // trông như đã xong.
+        kiem_quyen_0600(&f)?;
         Ok(std::fs::read_to_string(&f)
             .with_context(|| format!("không đọc được passphrase file {}", f.display()))?
             .trim()
