@@ -91,9 +91,22 @@ R2 down, đổi giá, khoá account, hoặc access key hết hạn → không sy
 
 v1 có **một** khoá, sinh tay, copy tay. Mất là mất: object trong hộp thư thành rác, và không có rotation để cứu ([ADR-0005 § Mô hình đe doạ](ADR/0005-no-app-layer-crypto.md#mô-hình-đe-doạ--cái-gì-được-bảo-vệ-cái-gì-không)).
 
-**Giảm nhẹ:** khoá là thứ **duy nhất** phải backup tay (password manager). Thiệt hại có giới hạn: hộp thư tự hết hạn sau 30 ngày ([N13c](NFR.md#3-giới-hạn)), không tích rác vĩnh viễn, và lịch sử local vẫn đọc được vì nó **không** mã hoá at-rest.
+**Sau [ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md) rủi ro này *đổi hình dạng chứ không mất đi*:** không còn file khoá để mất, nhưng có passphrase để quên. Và vì [N18f](NFR.md#4-bảo-mật) cấm server giữ khoá, đăng nhập lại **không** cứu được — không có ai để hỏi xin.
 
-**Kích hoạt xem lại:** thêm máy thứ 3, hoặc nghi khoá bị lộ → cần rotation, [ROADMAP § Sau v1](ROADMAP.md#sau-v1).
+**Giảm nhẹ:** passphrase là thứ **duy nhất** phải nhớ hoặc cất vào password manager. Thiệt hại có giới hạn: hộp thư tự hết hạn sau 30 ngày ([N13c](NFR.md#3-giới-hạn)), không tích rác vĩnh viễn, và lịch sử local vẫn đọc được vì nó **không** mã hoá at-rest — quên passphrase là mất phần đã sync, không mất máy đang dùng.
+
+**Kích hoạt xem lại:** nghi passphrase bị lộ → cần rotation, [ROADMAP § Sau v1](ROADMAP.md#sau-v1). Hoặc: chấp nhận cho server giữ khoá để đổi lấy recovery — phương án đã loại ở ADR-0007, bật lại được.
+
+---
+
+### R13 · Phụ thuộc identity provider và endpoint `auth`
+**Xác suất:** Trung bình · **Tác động:** Thấp — chỉ chặn việc thêm máy
+
+[ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md) thêm **hai** dependency cùng lúc: một identity provider bên ngoài, và một endpoint tự vận hành — đúng thứ mà [G4](PRD.md#3-mục-tiêu) suốt từ đầu tránh. Service tự vận hành là thứ hỏng lúc 3 giờ sáng.
+
+**Giảm nhẹ (nằm trong thiết kế, không phải lời hứa):** `auth` **không** nằm trên đường đi của nội dung. Nó chết thì máy đã đăng nhập chạy tiếp bằng credential còn hạn, chỉ không thêm được máy mới ([N33](NFR.md#6-khả-năng-vận-hành), [US-D2](USER-STORIES.md#us-d2--máy-cũ-không-chết-theo-lỗi-đăng-nhập)). Đó là lý do nó được thiết kế hẹp như vậy.
+
+**Kích hoạt xem lại:** nếu thực tế ít khi thêm máy tới mức vận hành `auth` không đáng — quay về **ghép máy trực tiếp**, phương án đã loại ở ADR-0007, không cần server nào.
 
 ---
 

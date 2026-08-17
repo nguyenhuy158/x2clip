@@ -8,7 +8,7 @@ Wireframe = bố cục và thứ bậc thông tin, cố tình **không** có mà
 
 ## 0. Có bao nhiêu bề mặt
 
-App này không phải "một cửa sổ". Có 5 bề mặt, mỗi cái gắn với story riêng:
+App này không phải "một cửa sổ". Có 6 bề mặt, mỗi cái gắn với story riêng:
 
 | # | Bề mặt | Story |
 |---|---|---|
@@ -17,6 +17,7 @@ App này không phải "một cửa sổ". Có 5 bề mặt, mỗi cái gắn v�
 | 3 | Cửa sổ cấu hình | [US-C5](../USER-STORIES.md#us-c5--cấu-hình-được) |
 | 4 | Xác nhận xoá toàn bộ | [US-B5](../USER-STORIES.md#us-b5--xoá-item) |
 | 5 | Trạng thái rỗng + lỗi | [NFR § Hành vi khi lỗi](../NFR.md#5-hành-vi-khi-lỗi) |
+| 6 | Đăng nhập + passphrase *(sau v1)* | [US-D1](../USER-STORIES.md#us-d1--đăng-nhập-trên-máy-mới), [US-D4](../USER-STORIES.md#us-d4--đăng-xuất-không-mất-lịch-sử) |
 
 Bề mặt 5 hay bị bỏ quên nhất, và nó chính là chỗ [exit criteria Phase 4](../ROADMAP.md#phase-4--ui--) yêu cầu "không có lỗi im lặng".
 
@@ -102,7 +103,12 @@ Dòng thứ hai trong menu là **lần bắt tay gần nhất với peer**. Khô
 |---|---|---|---|
 | Bình thường | ● + tên peer + "12s trước" | Danh sách đầy đủ | — |
 | Peer offline | ○ + "nixos offline · 4 phút" | Vẫn dùng bình thường, banner mảnh trên đầu: "Không thấy nixos — lịch sử local vẫn chạy" | [N3](../NFR.md#1-ngưỡng-chấp-nhận) |
-| Tailscale không chạy | ○ + "**Tailscale chưa chạy**" | Banner: "Không kết nối được Tailscale" + nút "Mở Tailscale" | [NFR § lỗi](../NFR.md#5-hành-vi-khi-lỗi) — bắt buộc nói chữ *Tailscale*, không phải "sync failed" |
+| Tailscale không chạy | ● (sync **vẫn chạy**) | Banner mảnh: "Mất kênh báo nhanh — sync vẫn chạy, chỉ chậm hơn" | [ADR-0006 § 6b](../ADR/0006-r2-mailbox-store-and-forward.md) — Tailscale chỉ là chuông. Gọi đây là "mất sync" là **sai** |
+| Không tới được R2 | ○ + "không tới được R2" | Banner: "Không kết nối được R2 — item vẫn lưu local, sẽ gửi khi có mạng" | [NFR § lỗi](../NFR.md#5-hành-vi-khi-lỗi) — nói chữ *R2*, không phải "sync failed" |
+| Access key sai / hết hạn | ⚠ | Banner đỏ: "Không vào được hộp thư — key sai hoặc hết hạn" + nút "Đăng nhập lại". **Phân biệt hẳn với mất mạng** | [NFR § lỗi](../NFR.md#5-hành-vi-khi-lỗi) |
+| Chưa đăng nhập (máy mới) | ○ + "chưa đăng nhập" | Màn hình đăng nhập ở [§ 3b](#3b-đăng-nhập-và-passphrase), không phải danh sách rỗng | [US-D1](../USER-STORIES.md#us-d1--đăng-nhập-trên-máy-mới) |
+| Token hết hạn | ○ + "cần đăng nhập lại" | **Danh sách vẫn dùng bình thường** + banner: "Cần đăng nhập lại để sync — lịch sử local vẫn tra được" | [N33](../NFR.md#6-khả-năng-vận-hành), [US-D2](../USER-STORIES.md#us-d2--máy-cũ-không-chết-theo-lỗi-đăng-nhập) |
+| Passphrase sai | ⚠ | "Passphrase không khớp — không giải mã được hộp thư". **Không** phải "đăng nhập thất bại" | [N18i](../NFR.md#4-bảo-mật) |
 | Tạm dừng | ⏸ + "Đã tạm dừng" | Banner: "Đang tạm dừng — vẫn lưu local, không gửi đi" | [US-A4](../USER-STORIES.md#us-a4--tạm-dừng-sync) |
 | Phím tắt bị chiếm | ● (sync vẫn chạy) | Báo một lần lúc khởi động: "⌘⇧V đang bị app khác dùng. Mở lịch sử từ tray, hoặc đổi phím trong Cấu hình" | [NFR § lỗi](../NFR.md#5-hành-vi-khi-lỗi) |
 | Không đọc được clipboard | ⚠ | Banner đỏ: "Không đọc được clipboard" + lý do cụ thể (thiếu `DISPLAY`/`XAUTHORITY`, hoặc compositor không hỗ trợ) | [Phase 0.2 ghi chú 3](../ROADMAP.md#kết-quả-02-2026-08-17) |
@@ -111,6 +117,45 @@ Dòng thứ hai trong menu là **lần bắt tay gần nhất với peer**. Khô
 | Tìm không ra | ● | "Không có item nào khớp *docker*." | — |
 
 Banner là **một dòng, nằm ngay dưới thanh tìm**, không phải dialog. Dialog chặn đường; lỗi sync không đáng chặn người dùng lấy item cũ.
+
+---
+
+## 3b. Đăng nhập và passphrase
+
+Bề mặt thứ 6, thêm 2026-08-17 cùng [ADR-0007](../ADR/0007-dang-nhap-va-khoa-tu-passphrase.md). **Chỉ hiện trên máy chưa từng đăng nhập** — không phải màn hình mở app hằng ngày.
+
+```
+┌─────────────────────────────────────────────┐
+│ x2clip                                      │
+│                                             │
+│ Máy này chưa được thêm vào tài khoản.       │
+│                                             │
+│            [ Đăng nhập ]                    │
+└─────────────────────────────────────────────┘
+
+        ↓ sau khi đăng nhập xong
+
+┌─────────────────────────────────────────────┐
+│ Passphrase                                  │
+│ [ ••••••••••••••••••••             ]        │
+│                                             │
+│ Cùng passphrase với các máy khác của bạn.   │
+│ Không ai khôi phục được nếu quên — kể cả    │
+│ chính x2clip.                               │
+│                                             │
+│                      [ Tiếp tục ]           │
+└─────────────────────────────────────────────┘
+```
+
+**Quy tắc**
+
+- **Đúng hai bước, không có bước ba.** Nếu bản dựng nào bắt chép file thì bản đó sai [G6](../PRD.md#3-mục-tiêu).
+- **Câu cảnh báo mất-là-mất phải nằm ngay cạnh ô nhập**, không nhét vào tooltip hay trang trợ giúp. Đó là lúc duy nhất người dùng còn cơ hội đi cất passphrase vào password manager.
+- **Không có nút "Quên passphrase?"** — không có luồng đó, và một nút dẫn tới ngõ cụt còn tệ hơn không có nút. Xem [R11](../RISKS.md#r11--mất-khoá-mã-hoá).
+- Passphrase hỏi **một lần mỗi máy**. Mở app lần sau đi thẳng vào lịch sử.
+- Nhập sai → chữ dưới ô: *"Passphrase không khớp — không giải mã được hộp thư"*. Đây là câu bắt buộc ([N18i](../NFR.md#4-bảo-mật)); "sai mật khẩu" là câu sai, nó chỉ người dùng đi gỡ nhầm chỗ.
+
+Danh sách máy + nút thu hồi ([US-D3](../USER-STORIES.md#us-d3--xem-và-thu-hồi-máy)) nằm trong [§ 4 Cấu hình](#4-cấu-hình), không phải màn hình riêng.
 
 ---
 
@@ -132,9 +177,17 @@ Không làm cửa sổ nhiều tab. Một trang, cuộn được.
 ├─────────────────────────────────────────────┤
 │ Sửa trực tiếp: ~/.config/x2clip/config.toml │
 ├─────────────────────────────────────────────┤
+│ Máy đã đăng nhập              (sau v1)      │
+│   macbook   · vừa xong                      │
+│   nixos     · 2 giờ trước                   │
+│   thinkpad  · 14 ngày trước    [ Thu hồi ]  │
+├─────────────────────────────────────────────┤
+│  [ Đăng xuất máy này ]                      │ ← giữ nguyên lịch sử local
 │              [ Xoá toàn bộ lịch sử ]        │ ← hành động phá huỷ, tách riêng dưới cùng
 └─────────────────────────────────────────────┘
 ```
+
+**Đăng xuất và xoá lịch sử là hai việc khác nhau, phải trông khác nhau.** Đăng xuất giữ nguyên lịch sử local ([US-D4](../USER-STORIES.md#us-d4--đăng-xuất-không-mất-lịch-sử)); gộp hai nút cạnh nhau cùng kiểu là cách chắc chắn để bấm nhầm cái không hoàn tác được.
 
 UI cấu hình **ghi vào cùng file TOML** người dùng sửa tay, không phải kho riêng. Hai nguồn sự thật cho config là cách chắc chắn để chúng lệch nhau.
 

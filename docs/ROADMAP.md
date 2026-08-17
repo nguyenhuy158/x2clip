@@ -211,3 +211,4 @@ Chưa cam kết. Chỉ làm khi dùng thật rồi thấy thiếu:
 | 3 | US-A3, US-C4 |
 | 4 | US-A4, US-B2 (UI), US-B3, US-B4, US-B5, US-C1, US-C2 |
 | 5 | US-C3 |
+| 6 (sau v1) | US-D1, US-D2, US-D3, US-D4 |

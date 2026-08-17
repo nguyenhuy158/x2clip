@@ -44,6 +44,7 @@ Không có server **của mình**. Hai node ngang hàng, cấu hình giống nha
 | `mailbox` | R2 qua S3 API: PUT / LIST / GET / DELETE, retry, backoff | Không giải mã, không chạm clipboard |
 | `notify` | WebSocket chở **object key**, listen + dial + reconnect | Không chở nội dung. Hỏng thì chỉ mất tốc độ |
 | `config` | Đọc/validate file config | — |
+| `auth` *(sau v1)* | Đăng nhập, giữ token, xin credential R2 tạm thời, dẫn xuất khoá từ passphrase ([ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md)) | **Không** chở nội dung clipboard. **Không** gửi passphrase đi đâu ([N18g](NFR.md#4-bảo-mật)). Hỏng thì chỉ chặn thêm máy mới |
 | `cli` | Binary headless, chạy được trước khi có UI | — |
 | `app` | Tauri: tray, phím tắt, cửa sổ, IPC | Không chứa logic sync |
 
@@ -182,6 +183,7 @@ x2clip/
 │       ├── crypto.rs          # mã hoá/giải mã payload (thư viện có sẵn)
 │       ├── mailbox.rs         # R2 qua S3 API: PUT/LIST/GET/DELETE + retry
 │       ├── notify.rs          # kênh chuông tuỳ chọn: WebSocket chở object key
+│       ├── auth.rs            # (sau v1) đăng nhập, token, credential tạm, Argon2id
 │       └── config.rs
 ├── cli/
 │   └── src/main.rs            # binary headless

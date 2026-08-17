@@ -34,6 +34,12 @@ Prototype tồn tại để trả lời những câu mà đọc doc không trả
 
 Ô đáng chú ý nhất là **`esc` không đụng clipboard** và **`⌘P` không đóng cửa sổ**. Hai cái này dễ code sai vì "đóng sau mỗi hành động" nghe hợp lý — dùng thử ba mươi giây là thấy sai.
 
+## Lệch với wireframe (2026-08-17)
+
+Prototype dựng theo ma trận trạng thái **trước** [ADR-0007](../ADR/0007-dang-nhap-va-khoa-tu-passphrase.md). Sáu nút trạng thái trong file vẫn đúng với những gì chúng mô tả, nhưng **thiếu** bốn trạng thái mới: chưa đăng nhập, token hết hạn, passphrase sai, access key hết hạn. Nút "Tailscale" trong prototype cũng còn nói *mất kết nối* — [WIREFRAMES § 3](WIREFRAMES.md#3-ma-trận-trạng-thái) đã sửa thành *chỉ chậm hơn, sync vẫn chạy*.
+
+Chưa cập nhật vì Phase 6 nằm sau v1 và prototype là đồ bỏ. **Nguồn chân lý là WIREFRAMES.md**, không phải file HTML này.
+
 ## Chưa dựng
 
 Màn hình cấu hình, hộp xác nhận xoá toàn bộ, lazy-load khi cuộn quá 50 item. Đã có wireframe ở [WIREFRAMES.md § 4–5](WIREFRAMES.md#4-cấu-hình) — dựng khi thật sự cần bấm thử, không phải để cho đủ bộ.

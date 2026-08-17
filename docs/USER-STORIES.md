@@ -212,12 +212,69 @@ Hai đầu vừa theo dõi vừa ghi clipboard → nếu không chặn, mỗi l�
 
 ---
 
+## Epic D — Thêm máy mới
+
+Thêm 2026-08-17 cùng [PRD G6](PRD.md#3-mục-tiêu). Cả epic này nằm **sau v1** — Phase 1–5 không đụng tới. Cơ sở kỹ thuật ở [ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md).
+
+### US-D1 · Đăng nhập trên máy mới
+**FR:** FR16, FR17 · **Phase:** 6 · **Ưu tiên:** Must
+
+> Là người dùng, tôi muốn cài app lên máy thứ ba rồi **đăng nhập** là có lịch sử, không phải scp file khoá từ máy cũ sang.
+
+**Acceptance criteria**
+- Given tôi cài app lần đầu trên một máy mới
+  Then app hỏi đăng nhập, rồi hỏi passphrase — **đúng hai bước, không có bước chép file nào**
+- Given tôi nhập đúng passphrase
+  Then item từ máy khác giải mã được và vào lịch sử máy này
+- Given tôi nhập sai passphrase
+  Then app nói **"passphrase không khớp — không giải mã được hộp thư"**, không nói "đăng nhập thất bại" ([N18i](NFR.md#4-bảo-mật))
+- Passphrase chỉ hỏi **một lần mỗi máy** — sau đó khoá nằm trong Keychain / file `0600` ([N18h](NFR.md#4-bảo-mật))
+- Given endpoint `auth` không tới được
+  Then báo rõ "không thêm được máy lúc này", **không** im lặng treo
+
+### US-D2 · Máy cũ không chết theo lỗi đăng nhập
+**FR:** FR16 · **Phase:** 6 · **Ưu tiên:** Must
+
+> Là người dùng, tôi không muốn một sự cố đăng nhập làm hỏng cái app tôi mở ba mươi lần mỗi ngày.
+
+**Acceptance criteria**
+- Given token hết hạn, hoặc mất mạng, hoặc endpoint `auth` chết
+  Then cửa sổ lịch sử **vẫn mở được**, tìm kiếm vẫn chạy, dùng lại item vẫn chạy ([N33](NFR.md#6-khả-năng-vận-hành))
+  And tray nói rõ "cần đăng nhập lại để sync", không phải một lỗi chung chung
+- Given `auth` chết nhưng credential R2 còn hạn
+  Then sync **vẫn chạy bình thường** — ràng buộc thiết kế, không phải may mắn
+
+### US-D3 · Xem và thu hồi máy
+**FR:** FR18 · **Phase:** 6 · **Ưu tiên:** Should
+
+> Là người dùng, tôi muốn thấy máy nào đang đăng nhập, và bỏ được máy đã bán đi.
+
+**Acceptance criteria**
+- Màn hình cấu hình liệt kê từng máy + lần đăng nhập cuối
+- Given tôi thu hồi một máy
+  Then credential máy đó hết hiệu lực, máy đó không LIST/GET được nữa
+  And **không** phải đổi passphrase, **không** phải làm gì trên các máy còn lại
+
+### US-D4 · Đăng xuất không mất lịch sử
+**FR:** FR19 · **Phase:** 6 · **Ưu tiên:** Should
+
+> Là người dùng, tôi muốn đăng xuất mà không mất những gì đã lưu trên máy này.
+
+**Acceptance criteria**
+- Given tôi đăng xuất
+  Then token và khoá bị xoá khỏi máy, sync dừng
+  And **lịch sử local còn nguyên**, kể cả item đã ghim
+- Given tôi đăng nhập lại bằng đúng passphrase cũ
+  Then sync chạy tiếp, không sinh ra lịch sử trùng lặp
+
+---
+
 ## Không có story cho
 
 Đây là phần cố ý bỏ trống, để không ai tưởng là quên:
 
 - Onboarding / wizard cài đặt — một người dùng, tự cài được
-- Đăng nhập, tài khoản — Tailscale đã lo identity ([ADR-0001](ADR/0001-transport-tailscale.md))
+- ~~Đăng nhập, tài khoản~~ — **đã có, xem Epic D** (đổi 2026-08-17). Vẫn **không** có: đăng ký tài khoản, quên mật khẩu, nhiều tài khoản trên một máy ([ADR-0007 § Phương án đã loại](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md#phương-án-đã-loại))
 - Chia sẻ clipboard cho người khác — [PRD § Ngoài scope](PRD.md#4-ngoài-scope)
 - Sync lịch sử đầy đủ giữa hai máy — cùng chỗ trên
 - Theme / tuỳ biến giao diện — chưa dùng thật thì chưa biết cần gì
