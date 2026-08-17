@@ -16,11 +16,20 @@ Cột *Phase* trỏ sang [ROADMAP.md](ROADMAP.md).
 > Là người dùng, tôi muốn nội dung vừa copy ở máy A xuất hiện trong clipboard máy B, để paste luôn mà không phải gửi qua chat.
 
 **Acceptance criteria**
-- Given cả hai máy đang chạy app và kết nối được nhau
+- Given **máy B đang tắt** lúc tôi copy ở máy A
+  When tôi bật máy B lên
+  Then nội dung đó vào clipboard máy B trong [N1c](NFR.md#1-ngưỡng-chấp-nhận), **không mất**
+  And đây là ca dùng **chính**, không phải ca biên — mac ở công ty, nixos ở nhà ([PRD § Ràng buộc](PRD.md#5-ràng-buộc))
+- Given tôi copy **nhiều** nội dung ở A trong lúc B tắt
+  When B bật lên
+  Then **tất cả** vào lịch sử B, nhưng **chỉ nội dung mới nhất** vào clipboard B — clipboard là một giá trị, lịch sử là hàng đợi
+- Given cả hai máy đang chạy app
   When tôi copy một đoạn text ở máy A
-  Then trong vòng thời gian ở [NFR § trễ text](NFR.md#1-ngưỡng-chấp-nhận), paste ở máy B ra đúng đoạn text đó
+  Then paste ở máy B ra đúng đoạn text đó, trong [N1](NFR.md#1-ngưỡng-chấp-nhận) nếu có kênh chuông, [N1b](NFR.md#1-ngưỡng-chấp-nhận) nếu không
 - Given tôi copy ở máy B
   Then chiều ngược lại hoạt động y hệt (sync hai chiều, không phải một chiều)
+- Given nội dung đang nằm trong hộp thư trên R2
+  Then nó **đã mã hoá trước khi rời máy** — Cloudflare thấy kích thước và thời điểm, không thấy nội dung ([N18](NFR.md#4-bảo-mật), [N24b](NFR.md#4-bảo-mật))
 - Given nội dung có ký tự Unicode, emoji, xuống dòng, tab
   Then nội dung nhận được giống **byte-for-byte**, không bị chuẩn hoá hay cắt
 - Given nội dung là chuỗi rỗng
@@ -36,12 +45,16 @@ Hai đầu vừa theo dõi vừa ghi clipboard → nếu không chặn, mỗi l�
 **Acceptance criteria**
 - Given tôi copy một lần ở máy A
   When sync hoàn tất
-  Then đúng **một** message được gửi A→B và **không có** message nào quay lại B→A
+  Then đúng **một** object được đặt vào hộp thư của B, và **không có** object nào quay lại hộp thư của A
 - Given máy B ghi giá trị nhận được vào clipboard local
-  Then watcher của B **không** coi đó là nội dung mới của người dùng
+  Then watcher của B **không** coi đó là nội dung mới của người dùng, nên B **không** PUT lại
+- Given cùng một object bị xử lý hai lần (DELETE trên R2 thất bại)
+  Then sổ `seen` chặn lần hai — không thêm item, và **clipboard hiện tại không bị ghi đè bằng nội dung cũ**
 - Given tôi copy lại **đúng cùng** nội dung đó một lần nữa (chủ động)
   Then app vẫn nhận đó là hành động mới và cập nhật thời điểm — nhưng không gửi lặp vô hạn
-- Có automated test khẳng định số message là hữu hạn và bằng 1 mỗi chiều
+- Có automated test khẳng định số object là hữu hạn và bằng 1 mỗi chiều
+
+Ở mô hình hộp thư, echo loop **không** làm máy treo như P2P — nó lặng lẽ sinh request R2 và hiện ra ở hoá đơn cuối tháng. Tệ hơn, không nhẹ hơn.
 
 ### US-A3 · Đồng bộ ảnh
 **FR:** FR8 · **Phase:** 3 · **Ưu tiên:** Must
@@ -89,6 +102,9 @@ Hai đầu vừa theo dõi vừa ghi clipboard → nếu không chặn, mỗi l�
   Then lịch sử vẫn còn (lưu trên đĩa, không phải trong RAM)
 - Given lịch sử vượt hạn mức ở [NFR § Giới hạn](NFR.md#3-giới-hạn)
   Then item cũ nhất **chưa ghim** bị xoá tự động
+- Given tôi copy ở máy kia (từ Phase 2 trở đi)
+  Then item đó cũng vào lịch sử máy này — mọi item đều đi qua hộp thư nên lịch sử **tự hội tụ**, không cần cơ chế sync history riêng ([PRD § Ngoài scope](PRD.md#4-ngoài-scope))
+  And phần **chưa** hội tụ là *state*: ghim và xoá vẫn là chuyện riêng từng máy trong v1 ([US-B4](#us-b4--ghim-item), [US-B5](#us-b5--xoá-item))
 
 ### US-B2 · Tìm trong lịch sử
 **FR:** FR5 · **Phase:** 1 (CLI) → 4 (UI) · **Ưu tiên:** Must
@@ -140,7 +156,11 @@ Hai đầu vừa theo dõi vừa ghi clipboard → nếu không chặn, mỗi l�
   Then nó mất khỏi lịch sử **local** ngay và không quay lại sau restart
 - Có cách xoá **toàn bộ** lịch sử trong một hành động
 - Xoá toàn bộ phải có bước xác nhận (không hoàn tác được)
-- Rõ ràng với người dùng: xoá chỉ tác động máy này, không xoá ở máy kia (vì lịch sử là local — [PRD § Ngoài scope](PRD.md#4-ngoài-scope))
+- Rõ ràng với người dùng: **xoá chỉ tác động máy này.** Nội dung đã hội tụ qua hộp thư nên bản copy ở máy kia **vẫn còn** — v1 chưa có tombstone ([ROADMAP § Sau v1](ROADMAP.md#sau-v1))
+- Given item còn đang nằm trong hộp thư (máy kia chưa nhận)
+  Then xoá ở local **không** rút object khỏi hộp thư — nó sẽ tới máy kia. Muốn nó không tới thì phải xoá trước khi copy, không phải sau
+- Given tôi xoá nội dung nhạy cảm
+  Then app nói thẳng hai điều trên, **không** để người dùng tưởng đã xoá sạch mọi nơi
 
 ---
 
@@ -165,11 +185,15 @@ Hai đầu vừa theo dõi vừa ghi clipboard → nếu không chặn, mỗi l�
 > Là người dùng, tôi muốn nhìn là biết sync còn sống, vì tưởng đã sync xong mà thật ra không có là lỗi tệ nhất của app loại này.
 
 **Acceptance criteria**
-- Tray icon phân biệt được ít nhất: **đã kết nối** / **mất kết nối** / **tạm dừng**
-- Given máy kia offline
-  Then trạng thái đổi trong vòng thời gian ở [NFR](NFR.md#1-ngưỡng-chấp-nhận), và lịch sử local **vẫn chạy bình thường**
+- Tray icon phân biệt được ít nhất: **hộp thư OK** / **không tới được hộp thư** / **đã gửi, chờ máy kia nhận** / **tạm dừng**
+- Given **máy kia đang tắt**
+  Then đây **không phải lỗi** — tray nói "đã gửi, chờ máy kia nhận", không hiện dấu đỏ. Hiện lỗi ở ca này là dạy người dùng bỏ qua dấu đỏ
+- Given không tới được R2
+  Then trạng thái đổi trong [N3](NFR.md#1-ngưỡng-chấp-nhận), lịch sử local **vẫn chạy bình thường**, item vào hàng chờ PUT
+- Given access key sai hoặc hết hạn
+  Then thông báo nói rõ là **sai khoá**, phân biệt được với mất mạng ([N18i](NFR.md#4-bảo-mật) cùng tinh thần)
 - Given Tailscale không chạy
-  Then thông báo nói rõ là Tailscale, không phải "sync failed" chung chung
+  Then tray nói **"chậm hơn bình thường"**, không nói lỗi — sync vẫn chạy qua poll. Kênh chuông là tuỳ chọn ([N1b](NFR.md#1-ngưỡng-chấp-nhận))
 - Chi tiết mọi trường hợp lỗi ở [NFR § Hành vi khi lỗi](NFR.md#5-hành-vi-khi-lỗi)
 
 ### US-C3 · Tự chạy khi đăng nhập
@@ -200,15 +224,18 @@ Hai đầu vừa theo dõi vừa ghi clipboard → nếu không chặn, mỗi l�
 ### US-C5 · Cấu hình được
 **FR:** FR14 · **Phase:** 2 · **Ưu tiên:** Should
 
-> Là người dùng, tôi muốn sửa peer, poll interval, giới hạn dung lượng mà không phải build lại app.
+> Là người dùng, tôi muốn sửa bucket, chu kỳ poll, giới hạn dung lượng mà không phải build lại app.
 
 **Acceptance criteria**
 - Config là một file text ở đường dẫn chuẩn của từng OS
+- **Access key R2 và khoá mã hoá đọc từ config/Keychain, không nhúng trong binary** — để sau này thay bằng đăng nhập ([ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md)) thì không phải sửa lại chỗ dùng
+- File chứa secret phải `0600`, và app **từ chối chạy** nếu quyền rộng hơn ([N18c](NFR.md#4-bảo-mật))
 - Given file config không tồn tại
   Then app tạo file mặc định và chạy được, không crash
 - Given config sai cú pháp
   Then báo lỗi chỉ rõ dòng nào, và **không** ghi đè file của người dùng bằng bản mặc định
-- Đổi peer list thì chỉ cần restart app, không cần cài lại
+- Đổi bucket hoặc danh sách máy thì chỉ cần restart app, không cần cài lại
+- Hạ chu kỳ poll R2 được, nhưng config phải ghi rõ **mỗi lần poll là một request có phí** ([N13b](NFR.md#3-giới-hạn))
 
 ---
 
@@ -276,5 +303,6 @@ Thêm 2026-08-17 cùng [PRD G6](PRD.md#3-mục-tiêu). Cả epic này nằm **sa
 - Onboarding / wizard cài đặt — một người dùng, tự cài được
 - ~~Đăng nhập, tài khoản~~ — **đã có, xem Epic D** (đổi 2026-08-17). Vẫn **không** có: đăng ký tài khoản, quên mật khẩu, nhiều tài khoản trên một máy ([ADR-0007 § Phương án đã loại](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md#phương-án-đã-loại))
 - Chia sẻ clipboard cho người khác — [PRD § Ngoài scope](PRD.md#4-ngoài-scope)
-- Sync lịch sử đầy đủ giữa hai máy — cùng chỗ trên
+- ~~Sync lịch sử đầy đủ giữa hai máy~~ — **không cần story riêng** (đổi 2026-08-17): mọi item đi qua hộp thư nên lịch sử tự hội tụ, đã nằm trong [US-B1](#us-b1--lịch-sử-được-lưu-lại). Phần *state* (ghim, xoá) thì để sau v1
+- Ghép nối hai máy bằng tay (pairing, quét QR) — hộp thư là điểm gặp, hai máy không nói trực tiếp với nhau. Kênh chuông Tailscale cũng chỉ đọc danh sách máy trong config ([ADR-0006](ADR/0006-r2-mailbox-store-and-forward.md))
 - Theme / tuỳ biến giao diện — chưa dùng thật thì chưa biết cần gì
