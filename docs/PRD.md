@@ -90,6 +90,6 @@ Không có release công khai, không có store. "Ship" = chạy được trên 
 
 | # | Câu hỏi | Chặn gì |
 |---|---|---|
-| Q1 | **Compositor / desktop trên NixOS là gì?** (Hyprland / Sway / GNOME / KDE / X11) | Chặn Phase 0 — quyết định clipboard adapter có chạy được không |
-| Q2 | Tailscale đã cài trên cả hai máy chưa? | Chặn Phase 2 |
+| ~~Q1~~ | **Compositor / desktop trên NixOS là gì?** → **X11**, không có DE (`XDG_SESSION_TYPE=x11`, `XDG_CURRENT_DESKTOP` rỗng). Không phải lo `wlr-data-control`; `arboard` dùng backend X11. Quyết định: **giữ X11**, không chuyển sang GNOME/Wayland (GNOME không implement `data_control`). | ✅ trả lời 2026-08-17 |
+| ~~Q2~~ | Tailscale đã cài trên cả hai máy chưa? → **Rồi.** `nixos` ↔ `macbook`, `tailscale ping` = pong 6ms, kết nối trực tiếp qua LAN (không qua DERP). | ✅ trả lời 2026-08-17 |
 | Q3 | Duyệt thứ tự phase, hay muốn UI sớm hơn để thấy hình trước? | Chặn Phase 1 |

@@ -4,11 +4,11 @@
 
 Không có deadline — đây là project cá nhân. Thứ tự thì có, và nó **có ràng buộc**: mỗi phase phải chạy được và đóng được exit criteria trước khi qua phase sau.
 
-**Trạng thái hiện tại:** chưa bắt đầu. Phase 0 đang bị chặn bởi [PRD Q1](PRD.md#9-câu-hỏi-mở) (compositor trên NixOS).
+**Trạng thái hiện tại:** Phase 0 đang làm. 0.1 và 0.3 đã pass ([PRD Q1, Q2](PRD.md#9-câu-hỏi-mở) đã trả lời: NixOS chạy **X11**, không DE; Tailscale `nixos` ↔ `macbook` ping trực tiếp 6ms). Còn 0.2 — thử `arboard` đọc/ghi text + ảnh trên cả hai máy.
 
 ---
 
-## Phase 0 — Spike · ⬜ Chặn bởi PRD Q1
+## Phase 0 — Spike · 🟡 Đang làm (0.1 ✅, 0.3 ✅, 0.2 còn lại)
 
 **Mục đích:** xác nhận ba giả định có thể phá vỡ cả kế hoạch. Làm bằng script nhỏ, không đoán.
 
