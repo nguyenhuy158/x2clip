@@ -22,7 +22,7 @@ Mỗi thông tin chỉ có **một** file là nguồn chính. File khác muốn 
 
 ## Trạng thái
 
-**[Phase 0](ROADMAP.md#phase-0--spike--✅-xong) xong, chưa bắt đầu code.** [Q1–Q3](PRD.md#9-câu-hỏi-mở) đã chốt hết; tài liệu thiết kế UI xong ([UI/](UI/), mở [prototype](UI/prototype.html) để xem). Tiếp theo: [Phase 1](ROADMAP.md#phase-1--core-local-một-máy--).
+**[Phase 0](ROADMAP.md#phase-0--spike--) xong, chưa bắt đầu code.** [Q1–Q3](PRD.md#9-câu-hỏi-mở) đã chốt hết; tài liệu thiết kế UI xong ([UI/](UI/), mở [prototype](UI/prototype.html) để xem). Tiếp theo: [Phase 1](ROADMAP.md#phase-1--core-local-một-máy--).
 
 **Đổi scope 2026-08-17 — đăng nhập để thêm máy** ([ADR-0007](ADR/0007-dang-nhap-va-khoa-tu-passphrase.md)). [G4](PRD.md#3-mục-tiêu) thu hẹp: được phép có **một** endpoint tự vận hành, để cấp quyền, không giữ khoá và không thấy nội dung. Nằm ở **Phase 6, sau v1** — Phase 1–5 không đổi gì.
 

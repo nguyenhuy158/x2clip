@@ -39,7 +39,7 @@ macOS thường đưa ảnh lên clipboard dưới dạng TIFF; Linux mong PNG. 
 
 **Dấu hiệu:** paste ra ảnh đen, ảnh mất trong suốt, hoặc kích thước lệch.
 
-**Giảm nhẹ:** chuẩn hoá **một chiều duy nhất** về PNG trước khi gửi ([ARCHITECTURE § Protocol](ARCHITECTURE.md#6-protocol)). [T6](TEST-PLAN.md#t6--round-trip-nội-dung) assert cùng kích thước pixel.
+**Giảm nhẹ:** chuẩn hoá **một chiều duy nhất** về PNG trước khi gửi ([ARCHITECTURE § Protocol](ARCHITECTURE.md#6-định-dạng-object)). [T6](TEST-PLAN.md#t6--round-trip-nội-dung) assert cùng kích thước pixel.
 
 ---
 
@@ -68,7 +68,7 @@ macOS có `org.nspasteboard.ConcealedType` để đánh dấu nội dung nhạy 
 
 Tailscale giờ chỉ chở tiếng chuông, không chở nội dung. Tailscale đứng → sync **vẫn chạy** qua poll R2, chỉ chậm hơn ([N1b](NFR.md#1-ngưỡng-chấp-nhận) thay cho [N1](NFR.md#1-ngưỡng-chấp-nhận)).
 
-**Giảm nhẹ:** không cần làm gì thêm. `notify.rs` là thành phần tuỳ chọn, bỏ hẳn cũng chạy ([ROADMAP 2b](ROADMAP.md#phase-2b--kênh-chuông-tailscale--⬜-tuỳ-chọn)).
+**Giảm nhẹ:** không cần làm gì thêm. `notify.rs` là thành phần tuỳ chọn, bỏ hẳn cũng chạy ([ROADMAP 2b](ROADMAP.md#phase-2b--kênh-chuông-tailscale--)).
 
 ---
 

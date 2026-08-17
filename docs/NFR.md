@@ -10,7 +10,7 @@
 
 | ID | Tiêu chí | Ngưỡng | Không đạt nghĩa là |
 |---|---|---|---|
-| N1 | Trễ sync text, **cả hai máy đang bật và có kênh chuông** ([ROADMAP 2b](ROADMAP.md#phase-2b--kênh-chuông-tailscale--⬜-tuỳ-chọn)) | < 1s | Poll interval hoặc đường mạng có vấn đề |
+| N1 | Trễ sync text, **cả hai máy đang bật và có kênh chuông** ([ROADMAP 2b](ROADMAP.md#phase-2b--kênh-chuông-tailscale--)) | < 1s | Poll interval hoặc đường mạng có vấn đề |
 | N1b | Trễ sync text, **không có kênh chuông** | ≤ 1 chu kỳ poll + 1s ([N13b](#3-giới-hạn)) | Poll không chạy, hoặc PUT thất bại lặng lẽ |
 | N1c | Trễ khi máy nhận **vừa bật lên / vừa có mạng** | < 10s | Không poll lúc khởi động và lúc wake. Đây là ca dùng **chính**, không phải ca biên |
 | N2 | Trễ sync ảnh 2MB | < 3s (cùng điều kiện N1) | Encode hoặc transport cần tối ưu |

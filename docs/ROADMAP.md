@@ -10,7 +10,7 @@ Không có deadline — đây là project cá nhân. Thứ tự thì có, và n�
 
 ---
 
-## Phase 0 — Spike · ✅ Xong
+## Phase 0 — Spike · ✅
 
 **Mục đích:** xác nhận ba giả định có thể phá vỡ cả kế hoạch. Làm bằng script nhỏ, không đoán.
 
@@ -104,9 +104,9 @@ Việc chính:
 
 > Đây là phase quan trọng nhất. Xong phase 2 là app đã có giá trị thật, phần còn lại là tiện nghi.
 
-## Phase 2b — Kênh chuông Tailscale · ⬜ tuỳ chọn
+## Phase 2b — Kênh chuông Tailscale · ⬜
 
-**Phạm vi:** `notify.rs`. Không chặn phase nào. Bỏ hẳn cũng được — mất tốc độ, không mất đúng.
+**Tuỳ chọn.** **Phạm vi:** `notify.rs`. Không chặn phase nào. Bỏ hẳn cũng được — mất tốc độ, không mất đúng.
 
 Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức [N1](NFR.md#1-ngưỡng-chấp-nhận) khi cả hai máy đang bật.
 

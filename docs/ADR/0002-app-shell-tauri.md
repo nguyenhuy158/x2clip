@@ -49,7 +49,7 @@ Tuy nhiên CLI **vẫn** được xây ở Phase 1 — nó là cách test logic 
 - Bundle nhỏ hơn Electron rõ rệt (dùng webview của hệ điều hành)
 
 ### Mất
-- **Webview khác nhau giữa hai OS** (WebKit trên macOS, WebKitGTK trên Linux) → CSS/JS có thể lệch. Bắt buộc kiểm UI trên **cả hai** OS, đã ghi ở [ROADMAP Phase 4](../ROADMAP.md#phase-4--ui--⬜)
+- **Webview khác nhau giữa hai OS** (WebKit trên macOS, WebKitGTK trên Linux) → CSS/JS có thể lệch. Bắt buộc kiểm UI trên **cả hai** OS, đã ghi ở [ROADMAP Phase 4](../ROADMAP.md#phase-4--ui--)
 - **`nix build` phức tạp**: Rust + node deps + webkitgtk trong một derivation ([R3](../RISKS.md#r3--nix-build-cho-app-gui-mất-công-hơn-dự-kiến))
 - Cần Node trong môi trường dev, dù logic là Rust
 

@@ -68,6 +68,6 @@ Nếu thiết kế một interface `watch()` rồi bên macOS thì giả lập b
 - Đánh dấu nhạy cảm có thể cần code native riêng bên cạnh
 
 ### Điều kiện bắt buộc trước khi tin quyết định này
-[ROADMAP 0.1–0.2](../ROADMAP.md#phase-0--spike--⬜-chặn-bởi-prd-q1): xác nhận compositor thật trên máy NixOS có hỗ trợ đọc clipboard, và crate đọc + ghi được **cả text lẫn ảnh** trên đó.
+[ROADMAP 0.1–0.2](../ROADMAP.md#phase-0--spike--): xác nhận compositor thật trên máy NixOS có hỗ trợ đọc clipboard, và crate đọc + ghi được **cả text lẫn ảnh** trên đó.
 
 Fail → ADR này phải sửa **trước** khi viết `clip.rs`. Đó là toàn bộ lý do Phase 0 tồn tại.

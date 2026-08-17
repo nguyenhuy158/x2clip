@@ -21,6 +21,6 @@ Mục lục đầy đủ kèm quy tắc cập nhật: [docs/README.md](docs/READ
 
 ## Trạng thái
 
-**[Phase 0](docs/ROADMAP.md#phase-0--spike--✅-xong) ✅ xong.** 0.1 (NixOS = X11, không DE), 0.3 (Tailscale `nixos` ↔ `macbook`, direct 6ms), 0.2 (`arboard` đọc/ghi text + ảnh, cả hai máy) đều pass. Không ADR nào phải đổi.
+**[Phase 0](docs/ROADMAP.md#phase-0--spike--) ✅ xong.** 0.1 (NixOS = X11, không DE), 0.3 (Tailscale `nixos` ↔ `macbook`, direct 6ms), 0.2 (`arboard` đọc/ghi text + ảnh, cả hai máy) đều pass. Không ADR nào phải đổi.
 
 Còn [Q3](docs/PRD.md#9-câu-hỏi-mở) chưa trả lời — duyệt thứ tự phase hay muốn UI sớm hơn — chặn Phase 1.

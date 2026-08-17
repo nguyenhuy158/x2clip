@@ -31,7 +31,7 @@ DO giữ WebSocket cho cả hai client, client mã hoá E2E bằng passphrase ch
 
 **Ưu điểm bị bỏ:** chạy được ở máy không cài được Tailscale; hai máy không cần cùng online.
 
-**Kích hoạt xem lại:** cần dùng ở máy không cài được Tailscale, hoặc [R8](../RISKS.md#r8--mất-item-khi-hai-máy-lệch-giờ-online) xảy ra thường xuyên thật.
+**Kích hoạt xem lại:** cần dùng ở máy không cài được Tailscale, hoặc [R8](../RISKS.md#r8--mất-item-khi-hai-máy-lệch-giờ-online--đóng-2026-08-17) xảy ra thường xuyên thật.
 
 ### SSH làm transport
 `ssh peer pbcopy` — auth + mã hoá miễn phí, không viết protocol.
@@ -60,9 +60,9 @@ Cùng tính chất kỹ thuật với Tailscale, không phụ thuộc nhà cung 
 
 ### Mất
 - **Phải cài Tailscale trên cả hai máy** — một dependency ngoài, không phải app tự đủ
-- **Hai máy phải cùng online.** Tailscale là mạng, không phải kho. Item copy lúc máy kia tắt thì không tới ([R8](../RISKS.md#r8--mất-item-khi-hai-máy-lệch-giờ-online))
+- **Hai máy phải cùng online.** Tailscale là mạng, không phải kho. Item copy lúc máy kia tắt thì không tới ([R8](../RISKS.md#r8--mất-item-khi-hai-máy-lệch-giờ-online--đóng-2026-08-17))
 - Phụ thuộc một nhà cung cấp ([R7](../RISKS.md#r7--phụ-thuộc-tailscale))
 - Nếu sau này đổi sang transport **không** mã hoá thì [N18](../NFR.md#4-bảo-mật) mất chỗ dựa, bắt buộc thêm crypto tầng app — xem [ADR-0005](0005-no-app-layer-crypto.md)
 
 ### Xác nhận ở Phase 0
-[ROADMAP 0.3](../ROADMAP.md#phase-0--spike--⬜-chặn-bởi-prd-q1): hai máy ping được nhau qua tên MagicDNS và mở được TCP port.
+[ROADMAP 0.3](../ROADMAP.md#phase-0--spike--): hai máy ping được nhau qua tên MagicDNS và mở được TCP port.

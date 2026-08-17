@@ -23,7 +23,7 @@
 | Thủ công, hai máy | Sync thật qua bucket R2 thật | Checklist | Mỗi phase từ 2 |
 | Chạy dài | Ổn định 7 ngày | Quan sát + log | Trước khi coi là xong |
 
-**CI chỉ có từ Phase 5, và chỉ để chặn release.** `.github/workflows/release.yml` chạy `cargo test` như job mà release `needs:` ([ROADMAP Phase 5](ROADMAP.md#phase-5--đóng-gói--⬜)) — mục đích duy nhất là không publish bản có [T2](#t2--không-có-echo-loop-hai-node)/[T3](#t3--thứ-tự-set-cờ-trước-khi-ghi) đỏ.
+**CI chỉ có từ Phase 5, và chỉ để chặn release.** `.github/workflows/release.yml` chạy `cargo test` như job mà release `needs:` ([ROADMAP Phase 5](ROADMAP.md#phase-5--đóng-gói--)) — mục đích duy nhất là không publish bản có [T2](#t2--không-có-echo-loop-hai-node)/[T3](#t3--thứ-tự-set-cờ-trước-khi-ghi) đỏ.
 
 Phase 1–4 thì chạy tay trước mỗi lần đóng phase. Không có ai nhắc, và CI cũng **không** cứu được phần lớn danh sách này: hộp thư giả chạy được trên CI, nhưng checklist hai máy thì không — không runner nào có hai máy của bạn và một bucket R2 thật. **Kỷ luật chạy checklist là của bạn.**
 
@@ -81,7 +81,7 @@ Thêm hai case của tầng ngoài, vì chúng đi trước cả JSON: object r�
 ### T10 — Peer lạ bị từ chối
 Kết nối từ địa chỉ không có trong config → từ chối + log ([N20](NFR.md#4-bảo-mật)).
 
-Chỉ áp dụng cho kênh chuông ([Phase 2b](ROADMAP.md#phase-2b--kênh-chuông-tailscale--⬜-tuỳ-chọn)) — Phase 2 không mở socket nào nên test này chưa có gì để chạy.
+Chỉ áp dụng cho kênh chuông ([Phase 2b](ROADMAP.md#phase-2b--kênh-chuông-tailscale--)) — Phase 2 không mở socket nào nên test này chưa có gì để chạy.
 
 ### T11 — Máy kia đang tắt thì item vẫn tới
 Không còn là câu hỏi mở: [ADR-0006](ADR/0006-r2-mailbox-store-and-forward.md) chốt là **gửi bù cả hàng đợi**, và [N8](NFR.md#1-ngưỡng-chấp-nhận) cam kết 0 mất mát *kể cả khi máy kia đang tắt lúc copy*.
@@ -93,6 +93,11 @@ Với hộp thư giả, "B đang tắt" = không chạy vòng ingest của B. K�
 - Assert **cả ba** vào lịch sử của B (đây là chỗ "clipboard là một giá trị" **không** áp dụng — lịch sử là hàng đợi)
 - Assert **chỉ một** item được ghi vào clipboard của B: item có `ts` lớn nhất ([ARCHITECTURE § Nhận từ hộp thư](ARCHITECTURE.md#nhận-từ-hộp-thư)). Ghi cả ba là bug thấy được bằng mắt: clipboard cuối cùng lại là nội dung cũ nhất
 - Assert B **không** PUT lại gì (nối với [T2](#t2--không-có-echo-loop-hai-node))
+
+### T12 — Không log nội dung clipboard
+Grep log sau khi chạy: không được xuất hiện nội dung, chỉ được có độ dài/hash/loại ([N23](NFR.md#4-bảo-mật)).
+
+Từ Phase 2, grep thêm: **khoá mã hoá, access key R2, passphrase** đều không được có trong log ([N18c](NFR.md#4-bảo-mật), [N18g](NFR.md#4-bảo-mật)). Chuỗi tìm là **giá trị thật** của khoá trong config test, không phải tên biến.
 
 ### T13 — DELETE fail không gây xử lý hai lần
 Hộp thư giả với `delete` luôn trả lỗi. Ingest cùng một object **hai lần**:
@@ -113,11 +118,6 @@ Hộp thư giả với `delete` luôn trả lỗi. Ingest cùng một object **h
 Assert key khớp `inbox/<máy>/<ULID>` và **không** chứa hash, không chứa nội dung, không chứa `kind` ([N18e](NFR.md#4-bảo-mật)). Hai lần copy **cùng** nội dung → hai key **khác nhau**.
 
 Key trùng theo hash thì người xem bucket biết được "hai máy này copy lại cùng thứ", dù không đọc được thứ đó.
-
-### T12 — Không log nội dung clipboard
-Grep log sau khi chạy: không được xuất hiện nội dung, chỉ được có độ dài/hash/loại ([N23](NFR.md#4-bảo-mật)).
-
-Từ Phase 2, grep thêm: **khoá mã hoá, access key R2, passphrase** đều không được có trong log ([N18c](NFR.md#4-bảo-mật), [N18g](NFR.md#4-bảo-mật)). Chuỗi tìm: giá trị thật của khoá trong config test, không phải tên biến.
 
 ### T16 — Hàng chờ PUT sống qua restart
 Mất mạng lúc copy → item nằm trong `store`, chưa `synced`. Kill process, dựng lại từ **cùng file DB** → assert item vẫn được PUT.
@@ -168,7 +168,7 @@ Ngưỡng nào cũng phải đo được, không phải cảm nhận:
 |---|---|
 | [N1](NFR.md#1-ngưỡng-chấp-nhận), [N2](NFR.md#1-ngưỡng-chấp-nhận) trễ sync | Log timestamp lúc phát hiện và lúc ghi ở đầu nhận; so hiệu. Ghi rõ lúc đo **có chuông hay không** — hai con số khác nhau ([N1b](NFR.md#1-ngưỡng-chấp-nhận)) |
 | [N1c](NFR.md#1-ngưỡng-chấp-nhận) trễ lúc vừa bật máy | Đo từ lúc daemon start tới lúc clipboard được ghi. Đây là ca dùng chính, phải có số thật |
-| [N13b](NFR.md#3-giới-hạn) chi phí R2 | Xem dashboard R2 sau 1 tuần chạy thật: số request Class A/B. Đối chiếu [R12](RISKS.md#r12--chi-phí-r2) — con số free tier trong đó **chưa tra cứu** |
+| [N13b](NFR.md#3-giới-hạn) chi phí R2 | Xem dashboard R2 sau 1 tuần chạy thật: số request Class A/B. Đối chiếu [R12](RISKS.md#r12--chi-phí-r2-vượt-dự-kiến) — con số free tier trong đó **chưa tra cứu** |
 | [N5](NFR.md#1-ngưỡng-chấp-nhận) tìm kiếm | Nhồi 1000 item, đo query |
 | [N6](NFR.md#1-ngưỡng-chấp-nhận) mở cửa sổ | Bấm phím tắt, đo tới lúc gõ được |
 | [N9](NFR.md#2-tài-nguyên) CPU rảnh | Activity Monitor / `top`, quan sát 10 phút |
