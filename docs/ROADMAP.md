@@ -58,10 +58,13 @@ Hai điều phát hiện thêm, ảnh hưởng thiết kế:
 **Deliverable:** binary CLI chạy được trên cả hai máy.
 
 **Exit criteria**
-- [ ] `cargo test` xanh, gồm test echo guard và test prune-không-đụng-pinned
-- [ ] Lịch sử còn nguyên sau restart
-- [ ] Copy hai lần cùng nội dung → một entry, `updated_at` được cập nhật
-- [ ] CPU lúc rảnh đạt [N9](NFR.md#2-tài-nguyên)
+- [x] `cargo test` xanh, gồm test echo guard (T1) và test prune-không-đụng-pinned (T4) — 5 test
+- [x] Lịch sử còn nguyên sau restart — daemon tắt, `x2clip list` vẫn ra đủ
+- [x] Copy hai lần cùng nội dung → một entry, `updated_at` được cập nhật (T5)
+- [x] CPU lúc rảnh đạt [N9](NFR.md#2-tài-nguyên) — 0.0%, RSS 13.9 MB trên macBook
+- [ ] **Còn lại:** chạy thử trên NixOS (`DISPLAY=:0` + `XAUTHORITY`, mục 2–3 Phase 0.2)
+
+Ghi chú: chưa có `x2clip copy <id>` — trên X11 clipboard là owner-based, tiến trình ghi rồi thoát là mất nội dung. Dùng lại item là việc của daemon ở [Phase 4](#phase-4--ui--).
 
 ## Phase 2 — Hộp thư R2 + mã hoá · ⬜
 
