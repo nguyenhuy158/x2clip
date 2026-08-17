@@ -16,10 +16,13 @@ Mỗi thông tin chỉ có **một** file là nguồn chính. File khác muốn 
 | [ROADMAP.md](ROADMAP.md) | Thứ tự phase, deliverable, exit criteria | Hỏi "giờ làm gì tiếp" |
 | [TEST-PLAN.md](TEST-PLAN.md) | Chiến lược test, quality gate mỗi phase | Sắp đóng một phase |
 | [RISKS.md](RISKS.md) | Risk register | Có gì bất ngờ xảy ra, hoặc review trước mỗi phase |
+| [UI/WIREFRAMES.md](UI/WIREFRAMES.md) | Bố cục màn hình + ma trận trạng thái UI | Sắp dựng giao diện, cần biết màn hình gồm gì |
+| [UI/MOCKUPS.md](UI/MOCKUPS.md) | Màu, chữ, khoảng cách, hình dạng trạng thái | Cần token cụ thể để code UI |
+| [UI/PROTOTYPE.md](UI/PROTOTYPE.md) | Hợp đồng tương tác + bản bấm thử [prototype.html](UI/prototype.html) | Muốn *dùng thử* trước khi code |
 
 ## Trạng thái
 
-**Chưa bắt đầu code.** Đang chờ xác nhận 3 câu ở [PRD.md § Câu hỏi mở](PRD.md#9-câu-hỏi-mở) — câu về compositor Wayland đang chặn Phase 0.
+**[Phase 0](ROADMAP.md#phase-0--spike--✅-xong) xong, chưa bắt đầu code.** Còn [Q3](PRD.md#9-câu-hỏi-mở) chưa chốt — mở [prototype](UI/prototype.html) xem rồi trả lời.
 
 ## Quy tắc cập nhật
 
