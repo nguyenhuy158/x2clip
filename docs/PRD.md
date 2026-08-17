@@ -48,7 +48,7 @@ Không có người dùng thứ hai trong scope này. Điều đó cho phép b�
 ## 5. Ràng buộc
 
 - **Hai OS bất đối xứng**: macOS không có event clipboard, Linux thì có. Chi tiết ở [ARCHITECTURE.md](ARCHITECTURE.md).
-- **Wayland đọc clipboard phụ thuộc compositor**, không phụ thuộc distro. Đây là rủi ro cao nhất — xem [RISKS.md](RISKS.md) R1.
+- **Máy NixOS chạy X11**, không DE. Clipboard X11 là *owner-based*: process ghi phải còn sống. (Wayland từng là rủi ro cao nhất — [R1](RISKS.md#r1--wayland-compositor-không-cho-đọc-clipboard--đóng-2026-08-17) đã đóng.)
 - **Clipboard chứa dữ liệu nhạy cảm** (password, token). Ràng buộc bảo mật ở [NFR.md § Bảo mật](NFR.md#4-bảo-mật).
 - **Phải cài Tailscale trên cả hai máy.** Đánh đổi có ý thức: bớt hẳn một backend, đổi lấy một dependency ngoài.
 

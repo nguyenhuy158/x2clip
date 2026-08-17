@@ -39,6 +39,7 @@ Hai điều phát hiện thêm, ảnh hưởng thiết kế:
 
 1. **X11 clipboard là owner-based** — process ghi phải *còn sống* thì nội dung mới còn. Không phải vấn đề với daemon chạy nền, nhưng CLI kiểu `x2clip paste` một phát rồi thoát sẽ mất nội dung trên Linux. Ghi nhận cho [Phase 1](#phase-1--core-local-một-máy--).
 2. Máy nixos có **hai X display**: `:0` (thật) và `:10` (xrdp). Chỉ `:0` kết nối được; `:10` timeout. Daemon phải chốt `DISPLAY=:0`, đừng đoán từ env.
+3. Process **ngoài session đồ hoạ không thấy clipboard**. Qua SSH `XDG_SESSION_TYPE=tty`, phải export cả `DISPLAY=:0` **và** `XAUTHORITY=/home/huy/.Xauthority` mới đọc được. systemd user unit chạy đúng trong điều kiện đó → [Phase 5](#phase-5--đóng-gói--) phải set hai biến này trong unit (hoặc `After=`/`PartOf=graphical-session.target`), không thì app im lặng không thấy clipboard.
 
 > Đừng bỏ phase này vì "chắc chạy được". Phát hiện Wayland không cho đọc clipboard lúc đang viết UI là đắt gấp nhiều lần.
 
@@ -142,6 +143,7 @@ Chưa cam kết. Chỉ làm khi dùng thật rồi thấy thiếu:
 |---|---|
 | **Sync cả lịch sử giữa hai máy** — P2P qua Tailscale, merge rule ở [ADR-0004 § Xem lại](ADR/0004-storage-sqlite-local-history.md#xem-lại-2026-08-17--sync-lịch-sử) | **Đã muốn** (2026-08-17). Làm sau Phase 5, không chặn v1. |
 | Relay server (Cloudflare D1 / Durable Object) | Chỉ khi cần **store-and-forward**: copy ở A lúc B đang tắt. Kèm điều kiện bắt buộc: mã hoá tầng app trước khi lên cloud. D1 làm kho chính đã bị loại — xem ADR-0004. |
+| **Backup lên Cloudflare R2** — SQLite local vẫn là nguồn chân lý; R2 chỉ giữ bản copy. Bắt buộc: (1) mã hoá trước khi upload, key giữ local; (2) định kỳ ~1 lần/ngày, **không** realtime; (3) lỗi R2 thì log rồi bỏ qua, không chặn app. Cách làm: `sqlite3 .backup` → `age` → `PUT`. **D1 không dùng cho việc này** — backup là chép file, không phải query. | Mất history một lần và thấy tiếc. Trước đó `cp` file `.db` là đủ. |
 | Máy thứ 3+ | Có máy thứ ba |
 | Watch path riêng cho Linux | Trễ 250ms thấy rõ khi dùng |
 | Rich text / RTF | Paste mất format gây khó chịu thật |

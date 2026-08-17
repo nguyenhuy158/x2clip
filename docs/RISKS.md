@@ -8,19 +8,6 @@ Thang: **Xác suất** và **Tác động** = Cao / TB / Thấp. Chỉ có một
 
 ## Rủi ro đang mở
 
-### R1 · Wayland compositor không cho đọc clipboard
-**Xác suất:** Cao · **Tác động:** Cao — phá vỡ cả kế hoạch
-
-Đọc clipboard trên Wayland cần protocol `wlr-data-control` hoặc `ext-data-control`. Hỗ trợ phụ thuộc **compositor**, không phụ thuộc distro — biết là NixOS thì chưa biết gì. GNOME/Mutter là chỗ hay thiếu.
-
-**Dấu hiệu:** đọc clipboard trả về rỗng hoặc lỗi permission trên Linux, dù cùng code chạy ổn trên macOS.
-
-**Giảm nhẹ:** [ROADMAP Phase 0.1–0.2](ROADMAP.md#phase-0--spike--⬜-chặn-bởi-prd-q1) kiểm trước tiên, bằng tay, trước khi viết dòng code nào của app.
-
-**Kế hoạch B:** gọi `wl-copy`/`wl-paste` ngoài; nếu vẫn không được thì chạy X11. Cả hai đều làm [ADR-0003](ADR/0003-clipboard-arboard-polling.md) phải sửa.
-
----
-
 ### R2 · Vòng lặp echo
 **Xác suất:** Cao nếu quên · **Tác động:** Cao — app không dùng được
 
@@ -111,6 +98,13 @@ CleanClip/Paste có nhiều tính năng hấp dẫn (sync lịch sử đầy đ�
 
 ## Rủi ro đã đóng
 
-Chưa có — chưa bắt đầu code.
+### ~~R1~~ · Wayland compositor không cho đọc clipboard — đóng 2026-08-17
+Từng là **Cao/Cao**, rủi ro số một của cả kế hoạch: đọc clipboard trên Wayland cần `wlr-data-control` hoặc `ext-data-control`, mà hỗ trợ thì tuỳ compositor (GNOME/Mutter hay thiếu).
+
+**Đóng vì:** máy nixos chạy **X11** (Xorg 21.1.23), không có DE — không có compositor Wayland nào trong hình. [Phase 0.1–0.2](ROADMAP.md#kết-quả-02-2026-08-17) xác nhận `arboard` dùng backend X11 đọc/ghi được cả text lẫn ảnh. Kế hoạch B (`wl-copy`/`wl-paste`) không cần dùng.
+
+**Mở lại khi:** chuyển máy nixos sang Wayland, hoặc thêm máy Linux thứ hai chạy Wayland. Lúc đó [ADR-0003](ADR/0003-clipboard-arboard-polling.md) phải xem lại trước khi sửa code.
+
+---
 
 Khi đóng một rủi ro thì chuyển xuống đây kèm lý do, đừng xoá. Biết vì sao một lo lắng đã hết cũng đáng giá.

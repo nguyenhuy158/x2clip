@@ -47,7 +47,7 @@ Nếu thiết kế một interface `watch()` rồi bên macOS thì giả lập b
 ### Gọi tool ngoài (`pbcopy`/`pbpaste`, `wl-copy`/`wl-paste`, `xclip`)
 **Loại vì:** spawn process mỗi 250ms là không đạt [N9](../NFR.md#2-tài-nguyên). Với ảnh còn phải qua file tạm.
 
-**Nhưng đây là kế hoạch B của [R1](../RISKS.md#r1--wayland-compositor-không-cho-đọc-clipboard).** Nếu crate không chạy được trên compositor thực tế thì chuyển sang cách này — kèm nới poll interval để bù chi phí spawn.
+**Nhưng đây là kế hoạch B của [R1](../RISKS.md#r1--wayland-compositor-không-cho-đọc-clipboard--đóng-2026-08-17) — R1 đã đóng, nên không dùng.** Nếu crate không chạy được trên compositor thực tế thì chuyển sang cách này — kèm nới poll interval để bù chi phí spawn.
 
 ### Chỉ hỗ trợ X11 trên Linux
 **Loại vì:** X11 clipboard đơn giản và ổn định hơn hẳn, nhưng bắt người dùng rời Wayland là bắt họ đổi desktop vì một app clipboard. Sai chiều.

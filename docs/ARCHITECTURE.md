@@ -152,6 +152,6 @@ x2clip/
 
 Chỉ được có ba chỗ. Nhiều hơn là dấu hiệu abstraction đang rò rỉ:
 
-1. **`clip.rs`** — backend clipboard (crate lo phần lớn, nhưng Wayland cần fallback — xem [RISKS.md](RISKS.md) R1).
+1. **`clip.rs`** — backend clipboard (`arboard` lo hết: macOS NSPasteboard + X11, đã đo ở [Phase 0.2](ROADMAP.md#kết-quả-02-2026-08-17)).
 2. **Đánh dấu nhạy cảm** — macOS có, Linux không ([N22](NFR.md#4-bảo-mật)).
 3. **File tự chạy** — launchd plist vs systemd user unit.
