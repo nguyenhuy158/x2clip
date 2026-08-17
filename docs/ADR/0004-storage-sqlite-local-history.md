@@ -73,3 +73,39 @@ Hệ quả trực tiếp người dùng thấy: xoá một item ở máy A **kh�
 - **Prune luôn loại trừ `pinned = 1`**, bất kể hạn mức ([N14](../NFR.md#3-giới-hạn)). Có [T4](../TEST-PLAN.md#t4--prune-không-đụng-item-đã-ghim) canh.
 - **DB lỗi thì không tự xoá** — báo lỗi, giữ file, để người dùng quyết ([NFR § Hành vi khi lỗi](../NFR.md#5-hành-vi-khi-lỗi)). Tự "sửa" bằng cách xoá là mất dữ liệu.
 - Ảnh lưu **blob**, không base64. Base64 chỉ dùng lúc truyền qua frame.
+
+## Xem lại 2026-08-17 — sync lịch sử
+
+**Kích hoạt:** chủ project muốn lịch sử dùng chung giữa hai máy, và đề xuất chuyển kho lưu trữ sang **Cloudflare D1**.
+
+### Giữ 4a. Bỏ 4b — nhưng sau v1, và không dùng D1.
+
+**D1 bị loại làm kho chính:**
+
+| Lý do | Chi tiết |
+|---|---|
+| Không offline | D1 truy cập qua HTTP tới edge. Mất mạng là mất cả lịch sử lẫn khả năng đọc item cũ. [US-B1](../USER-STORIES.md#us-b1--lịch-sử-được-lưu-lại) không đòi mạng. |
+| Trễ | Mỗi lần copy = 1 round trip Internet (50–200ms) thay vì ghi local (micro giây). Phá [N9](../NFR.md#2-tài-nguyên) và cảm giác dùng. |
+| Cần backend | Desktop app không nối trực tiếp D1; phải có Worker + API token. Đi ngược [PRD G4](../PRD.md#3-mục-tiêu) và chính lý do chọn [ADR-0001](0001-transport-tailscale.md). |
+| Phá giả định bảo mật | [ADR-0005](0005-no-app-layer-crypto.md) bỏ mã hoá tầng app **vì** dữ liệu chỉ đi giữa hai máy qua WireGuard. Đưa clipboard (password, token) lên cloud thì phải mã hoá tầng app trước → ADR-0005 phải viết lại. |
+| Ảnh | D1 không dành cho blob lớn; ảnh phải sang R2 → thêm service thứ hai. |
+
+**Thay bằng:** SQLite local vẫn là nguồn chân lý; sync lịch sử **peer-to-peer qua kênh Tailscale đã có** — mở rộng message type của `peer.rs` từ Phase 2, không thêm hạ tầng.
+
+### Quy tắc merge — trả lời các câu hỏi ADR này từng nêu
+
+| Câu hỏi | Quy tắc |
+|---|---|
+| Khoá định danh item | `hash` nội dung. Hai máy cùng nội dung → cùng row, dedupe tự nhiên. |
+| Ghim ở A có ghim ở B | Có. `pinned` merge bằng **OR**. |
+| `updated_at` lệch đồng hồ | Lấy **max**. Lệch vài giây trên lịch sử clipboard không gây hại thật; không cần Lamport clock cho 2 máy. |
+| Xoá ở A có xoá ở B | Có. Bảng `tombstones(hash, deleted_at)`, giữ **30 ngày** — bằng cửa sổ lịch sử ở [N14](../NFR.md#3-giới-hạn), nên tombstone không sống ngắn hơn thời gian một item còn tồn tại. |
+| Máy mới cài lần đầu | Bắt đầu **rỗng**, không backfill lịch sử cũ. Backfill 1000 item là bài toán riêng, chưa cần. |
+
+Đây là merge rule viết tay, không phải CRDT — đủ vì chỉ 2 máy, một người dùng, dữ liệu append-mostly.
+
+### Điều kiện D1 / Durable Object mới thực sự cần
+
+**Store-and-forward:** máy A copy khi máy B đang **tắt**, và B phải nhận được lúc bật lên. P2P không làm được (cần cả hai online cùng lúc). Nếu tình huống đó xảy ra thường xuyên khi dùng thật → mở ADR mới, và khi đó **bắt buộc** mã hoá tầng app trước khi đẩy bất kỳ byte nào lên Cloudflare.
+
+Ghi ở [ROADMAP § Sau v1](../ROADMAP.md#sau-v1). **Không chặn v1** — v1 vẫn chỉ sync clipboard hiện tại.

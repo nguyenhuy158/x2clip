@@ -140,8 +140,8 @@ Chưa cam kết. Chỉ làm khi dùng thật rồi thấy thiếu:
 
 | Ý tưởng | Điều kiện kích hoạt |
 |---|---|
-| Sync cả lịch sử giữa hai máy | Thường xuyên cần item cũ ở máy kia |
-| Relay server (Cloudflare DO) | Cần chạy trên máy không cài được Tailscale, hoặc hai máy hay lệch giờ online |
+| **Sync cả lịch sử giữa hai máy** — P2P qua Tailscale, merge rule ở [ADR-0004 § Xem lại](ADR/0004-storage-sqlite-local-history.md#xem-lại-2026-08-17--sync-lịch-sử) | **Đã muốn** (2026-08-17). Làm sau Phase 5, không chặn v1. |
+| Relay server (Cloudflare D1 / Durable Object) | Chỉ khi cần **store-and-forward**: copy ở A lúc B đang tắt. Kèm điều kiện bắt buộc: mã hoá tầng app trước khi lên cloud. D1 làm kho chính đã bị loại — xem ADR-0004. |
 | Máy thứ 3+ | Có máy thứ ba |
 | Watch path riêng cho Linux | Trễ 250ms thấy rõ khi dùng |
 | Rich text / RTF | Paste mất format gây khó chịu thật |
