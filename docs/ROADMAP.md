@@ -159,10 +159,22 @@ Không có kênh này thì trễ = chu kỳ poll (30–60s). Có thì về mức
 - macOS: `.app` bundle + launchd plist
 - NixOS: `flake.nix` (cả `aarch64-darwin` và `x86_64-linux`) + systemd user unit
 - README hướng dẫn cài
+- `.github/workflows/release.yml`: tag `v*` → build `.dmg` trên `macos-14`, `nix build` trên `ubuntu-latest`, tạo GitHub Release ([PRD §8](PRD.md#8-phát-hành))
+
+**CD bất đối xứng giữa hai máy** — đừng cố làm cho giống nhau:
+
+| Máy | Giao hàng |
+|---|---|
+| macbook | `.dmg` tải từ Release. **Không notarize** → lần đầu phải `xattr -dr com.apple.quarantine /Applications/x2clip.app`, README bắt buộc ghi câu này |
+| nixos | `nix build github:nguyenhuy158/x2clip` — flake fetch source rồi build. **Không** upload binary Linux vào Release; job Linux trong CD chỉ để chứng minh `nix build` xanh |
+
+Release job phải `needs:` job test — không publish bản có [T2/T3](TEST-PLAN.md) (echo guard) đỏ.
 
 **Exit criteria**
 - [ ] `nix build` xong chạy được trên NixOS
 - [ ] `.app` mở được trên máy sạch
+- [ ] Tag `v*` → Release tự có `.dmg`, và `.dmg` đó mở được trên máy mac sạch sau khi bỏ quarantine
+- [ ] README có đúng câu lệnh bỏ quarantine, đã thử trên máy chưa từng cài app
 - [ ] Restart máy → app tự chạy nền, không hiện cửa sổ
 - [ ] Kill process → tự restart
 - [ ] Chạy nền 7 ngày không cần can thiệp ([N25](NFR.md#6-khả-năng-vận-hành))
