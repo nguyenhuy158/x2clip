@@ -79,7 +79,12 @@ Hai đầu vừa theo dõi vừa ghi clipboard → nếu không chặn, mỗi l�
 **Acceptance criteria**
 - Given tôi bật "tạm dừng" từ tray
   When tôi copy nội dung
-  Then không có gì được gửi đi, nhưng lịch sử local vẫn ghi
+  Then **không PUT** object nào lên hộp thư, nhưng lịch sử local vẫn ghi
+- Given đang tạm dừng
+  When tôi bật lại
+  Then những item copy trong lúc tạm dừng **không** được gửi bù — chúng ở lại máy vĩnh viễn. Tạm dừng không phải hoãn gửi; ai bật nó là để nội dung *không* rời máy, gửi bù sau là đúng cơ chế mà sai mục đích. Khác với hàng đợi PUT của [T16](TEST-PLAN.md#t16--hàng-chờ-put-sống-qua-restart) (mất mạng → gửi lại), item lúc tạm dừng phải được đánh dấu local-only trong `store` để vòng gửi bỏ qua nó
+- Given đang tạm dừng
+  Then vòng **nhận** cũng dừng: không LIST, không GET, không DELETE. Item máy kia gửi vẫn nằm trong hộp thư (30 ngày lifecycle) và về khi bật lại — dừng nhận không mất gì, dừng gửi thì mất có chủ đích
 - Given đang tạm dừng
   Then tray icon hiện rõ trạng thái đó, không im lặng
 - Tạm dừng **không** tự bật lại sau khi restart app (trạng thái sau restart phải là trạng thái người dùng chọn gần nhất)

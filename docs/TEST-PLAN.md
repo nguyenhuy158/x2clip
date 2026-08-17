@@ -84,7 +84,7 @@ Kết nối từ địa chỉ không có trong config → từ chối + log ([N2
 Chỉ áp dụng cho kênh chuông ([Phase 2b](ROADMAP.md#phase-2b--kênh-chuông-tailscale--)) — Phase 2 không mở socket nào nên test này chưa có gì để chạy.
 
 ### T11 — Máy kia đang tắt thì item vẫn tới
-Không còn là câu hỏi mở: [ADR-0006](ADR/0006-r2-mailbox-store-and-forward.md) chốt là **gửi bù cả hàng đợi**, và [N8](NFR.md#1-ngưỡng-chấp-nhận) cam kết 0 mất mát *kể cả khi máy kia đang tắt lúc copy*.
+Không còn là câu hỏi mở: [ADR-0006 § 6c](ADR/0006-r2-mailbox-store-and-forward.md#6c--chỉ-item-mới-nhất-được-ghi-vào-clipboard) chốt **cả lô vào history, chỉ item `ts` lớn nhất vào clipboard** — tức cả hàng đợi được gửi bù, không phải chỉ item cuối. [N8](NFR.md#1-ngưỡng-chấp-nhận) cam kết 0 mất mát *kể cả khi máy kia đang tắt lúc copy*.
 
 Với hộp thư giả, "B đang tắt" = không chạy vòng ingest của B. Kịch bản:
 
@@ -123,6 +123,8 @@ Key trùng theo hash thì người xem bucket biết được "hai máy này cop
 Mất mạng lúc copy → item nằm trong `store`, chưa `synced`. Kill process, dựng lại từ **cùng file DB** → assert item vẫn được PUT.
 
 Hàng chờ chỉ nằm trong RAM thì mất mạng + restart = mất item, mà [N8](NFR.md#1-ngưỡng-chấp-nhận) nói 0.
+
+Mặt còn lại, cùng cơ chế nhưng ngược yêu cầu: copy trong lúc **tạm dừng** → assert item **không bao giờ** được PUT, kể cả sau khi bật lại và sau restart ([US-A4](USER-STORIES.md#us-a4--tạm-dừng-sync)). Nếu cả hai dùng chung cờ `synced=0` thì bật lại sync sẽ gửi hết những gì người dùng cố tình giữ trên máy — hàng chờ và local-only phải phân biệt được.
 
 ## 4. Checklist thủ công
 
