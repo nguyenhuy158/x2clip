@@ -2,11 +2,15 @@
 
 use anyhow::Result;
 use x2clip_core::clip::{hash_text, Clipboard};
+use x2clip_core::watcher::EchoCell;
 use x2clip_core::{Store, Watcher, MAX_ITEMS};
 
 #[derive(Default)]
 struct FakeClipboard {
     text: Option<String>,
+    /// Nếu gắn, `set_text` sẽ soi cờ echo **ngay lúc ghi** để bắt lỗi đảo thứ tự.
+    cell: Option<EchoCell>,
+    co_set_truoc_khi_ghi: bool,
 }
 
 impl Clipboard for FakeClipboard {
@@ -14,6 +18,10 @@ impl Clipboard for FakeClipboard {
         self.text.clone()
     }
     fn set_text(&mut self, text: &str) -> Result<()> {
+        if let Some(cell) = &self.cell {
+            self.co_set_truoc_khi_ghi =
+                cell.lock().unwrap().as_deref() == Some(hash_text(text).as_str());
+        }
         self.text = Some(text.to_string());
         Ok(())
     }
@@ -36,6 +44,22 @@ fn t1_echo_guard_khong_sinh_item() -> Result<()> {
     w2.apply_remote("b")?;
     w2.tick()?;
     assert_eq!(w2.store().count()?, 0, "không có echo nào lọt qua");
+    Ok(())
+}
+
+/// T1 (phần thứ tự) — `apply_remote` phải set cờ **trước** khi ghi clipboard.
+/// Đảo lại thì test này đỏ; các assert count() ở trên thì không bắt được.
+#[test]
+fn t1c_apply_remote_set_co_truoc_khi_ghi() -> Result<()> {
+    let mut w = Watcher::new(FakeClipboard::default(), Store::open_memory()?);
+    let cell = w.echo_cell();
+    w.clip_mut().cell = Some(cell);
+
+    w.apply_remote("nhận từ hộp thư")?;
+    assert!(
+        w.clip_mut().co_set_truoc_khi_ghi,
+        "cờ echo phải có sẵn tại thời điểm set_text — nếu không là race"
+    );
     Ok(())
 }
 

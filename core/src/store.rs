@@ -83,6 +83,9 @@ impl Store {
 
     /// N14 — cắt theo tuổi rồi theo số lượng. Item đã ghim **không bao giờ** bị
     /// đụng tới (US-B4, T4).
+    ///
+    /// Tuổi tính từ **lần dùng cuối** (`updated_at`), không phải lúc tạo: copy
+    /// lại một snippet cũ là làm nó trẻ lại. Cố ý lệch với chữ nghĩa của N14.
     pub fn prune(&self) -> Result<usize> {
         let cutoff = now_ms() - MAX_AGE_MS;
         let mut n = self

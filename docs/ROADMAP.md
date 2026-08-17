@@ -45,7 +45,7 @@ Hai điều phát hiện thêm, ảnh hưởng thiết kế:
 
 > Đừng bỏ phase này vì "chắc chạy được". Phát hiện Wayland không cho đọc clipboard lúc đang viết UI là đắt gấp nhiều lần.
 
-## Phase 1 — Core local, một máy · ⬜
+## Phase 1 — Core local, một máy · 🟡 (xong trên macOS, chờ chạy thử NixOS)
 
 **Story:** [US-B1](USER-STORIES.md#us-b1--lịch-sử-được-lưu-lại), [US-B2](USER-STORIES.md#us-b2--tìm-trong-lịch-sử) (phần CLI)
 

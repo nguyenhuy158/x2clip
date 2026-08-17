@@ -33,6 +33,11 @@ impl<C: Clipboard> Watcher<C> {
         &self.store
     }
 
+    /// Chỉ để test soi clipboard giả.
+    pub fn clip_mut(&mut self) -> &mut C {
+        &mut self.clip
+    }
+
     /// Ghi một nội dung nhận từ nơi khác vào clipboard local.
     /// Phase 1 chỉ có test gọi; Phase 2 là đường về từ hộp thư.
     ///

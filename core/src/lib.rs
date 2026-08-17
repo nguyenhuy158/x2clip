@@ -25,6 +25,13 @@ pub fn default_db_path() -> anyhow::Result<std::path::PathBuf> {
         .ok_or_else(|| anyhow::anyhow!("không tìm được thư mục data của user"))?
         .join("x2clip");
     std::fs::create_dir_all(&dir)?;
+    // N21 — khoá cả thư mục: WAL sinh thêm `-wal`/`-shm` chứa nội dung vừa copy,
+    // chmod riêng file .db là hụt.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o700))?;
+    }
     Ok(dir.join("x2clip.db"))
 }
 
